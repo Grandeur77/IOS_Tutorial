@@ -33,15 +33,15 @@ struct ContentView: View {
                     .clipShape(Capsule())
                     .shadow(radius: 6)
                     
-//                    Button("Quiz Rush") {
-//                        selection = .quizRush
-//                    }
-//                    .font(.title2)
-//                    .padding()
-//                    .background(Color.accentColor)
-//                    .foregroundColor(.white)
-//                    .clipShape(Capsule())
-//                    .shadow(radius: 6)
+                    Button("Quiz Rush") {
+                        selection = .quizRush
+                    }
+                    .font(.title2)
+                    .padding()
+                    .background(Color.accentColor)
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+                    .shadow(radius: 6)
                     
                     Button("High Scores") {
                         showHighScores = true
@@ -58,9 +58,9 @@ struct ContentView: View {
             .navigationDestination(isPresented: Binding(get: { selection == .tapFrenzy }, set: { if !$0 { selection = nil } })) {
                 TapFrenzyView()
             }
-//            .navigationDestination(isPresented: Binding(get: { selection == .quizRush }, set: { if !$0 { selection = nil } })) {
-//                QuizRushView()
-//            }
+            .navigationDestination(isPresented: Binding(get: { selection == .quizRush }, set: { if !$0 { selection = nil } })) {
+                QuizRushView()
+            }
             .sheet(isPresented: $showHighScores) {
                 HighScoresSheet()
             }
@@ -72,7 +72,7 @@ struct HighScoresSheet: View {
     @Environment(\.dismiss) var dismiss
     
     @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
-//    @AppStorage("QuizRushHighScore") private var quizRushScore: Int = 0
+    @AppStorage("QuizRushHighScore") private var quizRushScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Default") private var tfDefaultScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Combo System") private var tfComboScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Trap Colour") private var tfTrapScore: Int = 0
@@ -109,21 +109,21 @@ struct HighScoresSheet: View {
                         
                         Divider().background(Color.gray)
                         
-//                        Text("Quiz Rush")
-//                            .font(.title2.bold())
-//                            .foregroundColor(.accentColor)
-//                        
-//                        HStack {
-//                            Text("Best Score")
-//                                .foregroundColor(.white)
-//                            Spacer()
-//                            Text("\(quizRushScore)")
-//                                .font(.title3.bold())
-//                                .foregroundColor(.yellow)
-//                        }
-//                        .padding()
-//                        .background(Color.gray.opacity(0.2))
-//                        .cornerRadius(10)
+                        Text("Quiz Rush")
+                            .font(.title2.bold())
+                            .foregroundColor(.accentColor)
+                        
+                        HStack {
+                            Text("Best Score")
+                                .foregroundColor(.white)
+                            Spacer()
+                            Text("\(quizRushScore)")
+                                .font(.title3.bold())
+                                .foregroundColor(.yellow)
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
                         
                         Divider().background(Color.gray)
                         

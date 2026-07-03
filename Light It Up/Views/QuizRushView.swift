@@ -40,11 +40,11 @@ struct QuizRushView: View {
         let currentDisplayQuestion = viewModel.questions[viewModel.currentIndex]
         let currentQuestion = currentDisplayQuestion.question
         
-        return VStack(spacing: 24) {
+        return VStack(spacing: 16) {
             // Header stats
             HStack {
                 Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
-                    .font(.headline)
+                    .font(.subheadline.bold())
                     .foregroundColor(.accentColor)
                 Spacer()
                 if viewModel.streak > 0 {
@@ -52,60 +52,56 @@ struct QuizRushView: View {
                         Image(systemName: "flame.fill")
                             .foregroundColor(.orange)
                         Text("Streak: \(viewModel.streak)")
-                            .font(.headline.bold())
+                            .font(.subheadline.bold())
                             .foregroundColor(.orange)
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding([.horizontal, .top])
             
             HStack {
                 Text("Score: \(viewModel.score)")
-                    .font(.title3.bold())
+                    .font(.headline.bold())
                     .foregroundColor(.white)
                 Spacer()
             }
             .padding(.horizontal)
             
-            Spacer()
-            
             // Circular Countdown Timer
             ZStack {
                 Circle()
-                    .stroke(Color.gray.opacity(0.15), lineWidth: 6)
-                    .frame(width: 60, height: 60)
+                    .stroke(Color.gray.opacity(0.15), lineWidth: 5)
+                    .frame(width: 50, height: 50)
                 
                 Circle()
                     .trim(from: 0.0, to: CGFloat(viewModel.questionTimeRemaining / 10.0))
                     .stroke(
                         viewModel.questionTimeRemaining > 3.0 ? Color.accentColor : Color.red,
-                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 60, height: 60)
-                    // Smooth linear transition for the shrinking circle outline
+                    .frame(width: 50, height: 50)
                     .animation(.linear(duration: 0.1), value: viewModel.questionTimeRemaining)
                 
                 Text(String(format: "%.0f", ceil(viewModel.questionTimeRemaining)))
-                    .font(.title3.bold())
+                    .font(.body.bold())
                     .foregroundColor(.white)
             }
-            .padding(.top, 8)
             
-            // Question panel
+            // Question panel (Optimized to prevent truncation)
             Text(currentQuestion.question.htmlDecoded)
-                .font(.title2.bold())
+                .font(.title3.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.8) // Shrink font slightly if very long
+                .fixedSize(horizontal: false, vertical: true) // Prevent vertical truncation
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(RoundedRectangle(cornerRadius: 15).fill(Color.gray.opacity(0.15)))
                 .padding(.horizontal)
             
-            Spacer()
-            
             // Answer options
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 ForEach(currentDisplayQuestion.shuffledAnswers, id: \.self) { answer in
                     Button(action: {
                         if viewModel.selectedAnswer == nil {
@@ -117,7 +113,8 @@ struct QuizRushView: View {
                     }) {
                         Text(answer.htmlDecoded)
                             .font(.body.bold())
-                            .padding()
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
                             .frame(maxWidth: .infinity)
                             .background(buttonColor(for: answer))
                             .foregroundColor(.white)
@@ -135,7 +132,7 @@ struct QuizRushView: View {
                 dismiss()
             }
             .foregroundColor(.accentColor)
-            .padding(.bottom)
+            .padding(.bottom, 8)
         }
     }
     

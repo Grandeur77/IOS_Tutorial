@@ -31,6 +31,9 @@ struct QuizRushView: View {
         .task {
             await viewModel.loadQuestions()
         }
+        .onDisappear {
+            viewModel.cleanup()
+        }
     }
     
     private var gameplayView: some View {
@@ -38,6 +41,7 @@ struct QuizRushView: View {
         let currentQuestion = currentDisplayQuestion.question
         
         return VStack(spacing: 24) {
+            // Header stats
             HStack {
                 Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
                     .font(.headline)
@@ -65,6 +69,30 @@ struct QuizRushView: View {
             
             Spacer()
             
+            // Circular Countdown Timer
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.15), lineWidth: 6)
+                    .frame(width: 60, height: 60)
+                
+                Circle()
+                    .trim(from: 0.0, to: CGFloat(viewModel.questionTimeRemaining / 10.0))
+                    .stroke(
+                        viewModel.questionTimeRemaining > 3.0 ? Color.accentColor : Color.red,
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 60, height: 60)
+                    // Smooth linear transition for the shrinking circle outline
+                    .animation(.linear(duration: 0.1), value: viewModel.questionTimeRemaining)
+                
+                Text(String(format: "%.0f", ceil(viewModel.questionTimeRemaining)))
+                    .font(.title3.bold())
+                    .foregroundColor(.white)
+            }
+            .padding(.top, 8)
+            
+            // Question panel
             Text(currentQuestion.question.htmlDecoded)
                 .font(.title2.bold())
                 .foregroundColor(.white)
@@ -76,6 +104,7 @@ struct QuizRushView: View {
             
             Spacer()
             
+            // Answer options
             VStack(spacing: 12) {
                 ForEach(currentDisplayQuestion.shuffledAnswers, id: \.self) { answer in
                     Button(action: {

@@ -3,10 +3,7 @@ import SwiftUI
 struct HomeTab: View {
     @State private var selection: GameType? = nil
     
-    // 1. Read high scores for Light It Up
-    @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
-    
-    // 2. Read high scores for all Tap Frenzy sub-modes
+    // Read high scores for all Tap Frenzy sub-modes
     @AppStorage("TapFrenzyHighScore_Default") private var tfDefaultScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Combo System") private var tfComboScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Trap Colour") private var tfTrapScore: Int = 0
@@ -14,10 +11,16 @@ struct HomeTab: View {
     @AppStorage("TapFrenzyHighScore_Shrinking Button") private var tfShrinkingScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Bonus Burst") private var tfBurstScore: Int = 0
     
-    // Calculates highest score across all Tap Frenzy sub-modes to display on the card
+    // high scores for all Tap Frenzy sub-modes
     var highestTapFrenzyScore: Int {
         max(tfDefaultScore, tfComboScore, tfTrapScore, tfMovingScore, tfShrinkingScore, tfBurstScore)
     }
+    
+    // high scores for Light It Up
+    @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
+    
+    // high scores for Quiz Rush
+    @AppStorage("QuizRushHighScore") private var quizRushScore: Int = 0
     
     var body: some View {
         NavigationStack {
@@ -47,8 +50,19 @@ struct HomeTab: View {
                     
                     Spacer()
                     
-                    // Buttons container
+                    // Buttons container (Tap Frenzy is now first)
                     VStack(spacing: 40) {
+                        // Tap Frenzy
+                        GameCard(
+                            title: "Tap Frenzy",
+                            description: "Speed game. Smash the buttons fast.",
+                            iconName: "hand.tap.fill",
+                            highScore: highestTapFrenzyScore
+                        ) {
+                            selection = .tapFrenzy
+                        }
+                        
+                        // Light It Up
                         GameCard(
                             title: "Light It Up",
                             description: "Reflex game. Tap before it goes dark.",
@@ -58,14 +72,14 @@ struct HomeTab: View {
                             selection = .lightItUp
                         }
                         
-                        // <-- Added Tap Frenzy Game Card
+                        // Quiz Rush
                         GameCard(
-                            title: "Tap Frenzy",
-                            description: "Speed game. Smash the buttons fast.",
-                            iconName: "hand.tap.fill",
-                            highScore: highestTapFrenzyScore
+                            title: "Quiz Rush",
+                            description: "Trivia game. Answer under pressure.",
+                            iconName: "questionmark.circle.fill",
+                            highScore: quizRushScore
                         ) {
-                            selection = .tapFrenzy
+                            selection = .quizRush
                         }
                     }
                     .padding(.horizontal)
@@ -73,12 +87,15 @@ struct HomeTab: View {
                     Spacer()
                 }
             }
+            // Navigation destinations
+            .navigationDestination(isPresented: Binding(get: { selection == .tapFrenzy }, set: { if !$0 { selection = nil } })) {
+                TapFrenzyView()
+            }
             .navigationDestination(isPresented: Binding(get: { selection == .lightItUp }, set: { if !$0 { selection = nil } })) {
                 LightItUpView()
             }
-            // <-- Added Tap Frenzy Navigation Destination
-            .navigationDestination(isPresented: Binding(get: { selection == .tapFrenzy }, set: { if !$0 { selection = nil } })) {
-                TapFrenzyView()
+            .navigationDestination(isPresented: Binding(get: { selection == .quizRush }, set: { if !$0 { selection = nil } })) {
+                QuizRushView()
             }
         }
     }

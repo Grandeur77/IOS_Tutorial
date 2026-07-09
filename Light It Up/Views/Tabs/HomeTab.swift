@@ -3,7 +3,21 @@ import SwiftUI
 struct HomeTab: View {
     @State private var selection: GameType? = nil
     
+    // 1. Read high scores for Light It Up
     @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
+    
+    // 2. Read high scores for all Tap Frenzy sub-modes
+    @AppStorage("TapFrenzyHighScore_Default") private var tfDefaultScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Combo System") private var tfComboScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Trap Colour") private var tfTrapScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Moving Target") private var tfMovingScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Shrinking Button") private var tfShrinkingScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Bonus Burst") private var tfBurstScore: Int = 0
+    
+    // Calculates highest score across all Tap Frenzy sub-modes to display on the card
+    var highestTapFrenzyScore: Int {
+        max(tfDefaultScore, tfComboScore, tfTrapScore, tfMovingScore, tfShrinkingScore, tfBurstScore)
+    }
     
     var body: some View {
         NavigationStack {
@@ -26,14 +40,14 @@ struct HomeTab: View {
                             .tracking(4)
                         
                         Text("Select a challenge to begin")
-                            .font(.system(size: 16, weight: .bold).monospaced())
+                            .font(.system(size: 10, weight: .bold).monospaced())
                             .foregroundColor(.gray)
                     }
                     .padding(.top, 40)
                     
                     Spacer()
                     
-                    // 2. Light It Up Button container
+                    // Buttons container
                     VStack(spacing: 40) {
                         GameCard(
                             title: "Light It Up",
@@ -43,15 +57,28 @@ struct HomeTab: View {
                         ) {
                             selection = .lightItUp
                         }
+                        
+                        // <-- Added Tap Frenzy Game Card
+                        GameCard(
+                            title: "Tap Frenzy",
+                            description: "Speed game. Smash the buttons fast.",
+                            iconName: "hand.tap.fill",
+                            highScore: highestTapFrenzyScore
+                        ) {
+                            selection = .tapFrenzy
+                        }
                     }
                     .padding(.horizontal)
                     
                     Spacer()
                 }
             }
-            // 3. Navigation destination to launch the game
             .navigationDestination(isPresented: Binding(get: { selection == .lightItUp }, set: { if !$0 { selection = nil } })) {
                 LightItUpView()
+            }
+            // <-- Added Tap Frenzy Navigation Destination
+            .navigationDestination(isPresented: Binding(get: { selection == .tapFrenzy }, set: { if !$0 { selection = nil } })) {
+                TapFrenzyView()
             }
         }
     }
@@ -68,7 +95,6 @@ struct GameCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                // Colored Icon Frame 
                 Image(systemName: iconName)
                     .font(.title3)
                     .foregroundColor(.accentColor)
@@ -80,7 +106,6 @@ struct GameCard: View {
                             .strokeBorder(Color.accentColor.opacity(0.25), lineWidth: 1)
                     )
                 
-                // Game Info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline)
@@ -95,7 +120,6 @@ struct GameCard: View {
                 
                 Spacer()
                 
-                // Score Badge (Color 2: Yellow)
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("HI-SCORE")
                         .font(.system(size: 8, weight: .bold).monospaced())

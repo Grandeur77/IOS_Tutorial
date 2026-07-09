@@ -1,9 +1,3 @@
-//
-//  String+HTML.swift
-//  Light It Up
-//
-//  Created by Mileesha Fernando on 2026-07-02.
-//
 import Foundation
 
 extension String {

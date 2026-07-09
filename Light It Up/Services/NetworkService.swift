@@ -1,6 +1,6 @@
 import Foundation
 
-class QuizNetworkService {
+class NetworkService {
     private let urlString = "https://opentdb.com/api.php?amount=10&type=multiple"
     
     func fetchQuestions() async throws -> [Question] {

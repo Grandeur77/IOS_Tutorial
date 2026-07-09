@@ -25,7 +25,7 @@ class QuizViewModel: ObservableObject {
         UserDefaults.standard.integer(forKey: "QuizRushHighScore")
     }
     
-    private let networkService = QuizNetworkService()
+    private let networkService = NetworkService()
     
     @MainActor
     func loadQuestions() async {

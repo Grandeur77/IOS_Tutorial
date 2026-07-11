@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeTab: View {
     @State private var selection: GameType? = nil
+    @State private var showHighScores = false // State to show sheet
     
     // Read high scores for all Tap Frenzy sub-modes
     @AppStorage("TapFrenzyHighScore_Default") private var tfDefaultScore: Int = 0
@@ -9,14 +10,14 @@ struct HomeTab: View {
     @AppStorage("TapFrenzyHighScore_Trap Colour") private var tfTrapScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Moving Target") private var tfMovingScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Shrinking Button") private var tfShrinkingScore: Int = 0
-    @AppStorage("TapFrenzyHighScore_Bonus Burst") private var tfBurstScore: Int = 0
+    @AppStorage("AppStorageKeyForTapFrenzyHighScore_Bonus Burst") private var tfBurstScore: Int = 0
     
-    // high scores for all Tap Frenzy sub-modes
+    // high score for all Tap Frenzy sub-modes
     var highestTapFrenzyScore: Int {
         max(tfDefaultScore, tfComboScore, tfTrapScore, tfMovingScore, tfShrinkingScore, tfBurstScore)
     }
     
-    // high scores for Light It Up
+    //high scores for Light It Up
     @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
     
     // high scores for Quiz Rush
@@ -50,7 +51,7 @@ struct HomeTab: View {
                     
                     Spacer()
                     
-                    // Buttons container (Tap Frenzy is now first)
+                    // Centered game selector buttons
                     VStack(spacing: 40) {
                         // Tap Frenzy
                         GameCard(
@@ -85,9 +86,23 @@ struct HomeTab: View {
                     .padding(.horizontal)
                     
                     Spacer()
+                    
+                    // Leaderboard button
+                    Button(action: {
+                        showHighScores = true
+                    }) {
+                        Image(systemName: "trophy.fill")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                            .frame(width: 60, height: 60)
+                            .background(Color.yellow)
+                            .clipShape(Circle())
+                            .shadow(color: .yellow.opacity(0.4), radius: 8)
+                    }
+                    .padding(.bottom, 30)
                 }
             }
-            // Navigation destinations
+            // Navigation links for games
             .navigationDestination(isPresented: Binding(get: { selection == .tapFrenzy }, set: { if !$0 { selection = nil } })) {
                 TapFrenzyView()
             }
@@ -97,11 +112,14 @@ struct HomeTab: View {
             .navigationDestination(isPresented: Binding(get: { selection == .quizRush }, set: { if !$0 { selection = nil } })) {
                 QuizRushView()
             }
+            // Leaderboards Sheet presentation
+            .sheet(isPresented: $showHighScores) {
+                HighScoresSheet()
+            }
         }
     }
 }
 
-// MARK: - Game Card Component
 struct GameCard: View {
     let title: String
     let description: String
@@ -162,6 +180,116 @@ struct GameCard: View {
                 RoundedRectangle(cornerRadius: 12)
                     .strokeBorder(Color.accentColor, lineWidth: 2)
             )
+        }
+    }
+}
+
+// high Scores Sheet Component
+struct HighScoresSheet: View {
+    @Environment(\.dismiss) var dismiss
+    
+    @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
+    @AppStorage("QuizRushHighScore") private var quizRushScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Default") private var tfDefaultScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Combo System") private var tfComboScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Trap Colour") private var tfTrapScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Moving Target") private var tfMovingScore: Int = 0
+    @AppStorage("TapFrenzyHighScore_Shrinking Button") private var tfShrinkingScore: Int = 0
+    @AppStorage("AppStorageKeyForTapFrenzyHighScore_Bonus Burst") private var tfBurstScore: Int = 0
+    
+    var modes: [(String, Int)] {
+        [
+            ("Default", tfDefaultScore),
+            ("Combo System", tfComboScore),
+            ("Trap Colour", tfTrapScore),
+            ("Moving Target", tfMovingScore),
+            ("Shrinking Button", tfShrinkingScore),
+            ("Bonus Burst", tfBurstScore)
+        ]
+    }
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 24) {
+                Text("High Score History")
+                    .font(.largeTitle.bold())
+                    .foregroundColor(.white)
+                    .padding(.top)
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Light It Up")
+                            .font(.title2.bold())
+                            .foregroundColor(.accentColor)
+                        
+                        HStack {
+                            Text("Best Score")
+                                .foregroundColor(.white)
+                            Spacer()
+                            Text("\(lightItUpScore)")
+                                .font(.title3.bold())
+                                .foregroundColor(.yellow)
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                        
+                        Divider().background(Color.gray)
+                        
+                        Text("Quiz Rush")
+                            .font(.title2.bold())
+                            .foregroundColor(.accentColor)
+                        
+                        HStack {
+                            Text("Best Score")
+                                .foregroundColor(.white)
+                            Spacer()
+                            Text("\(quizRushScore)")
+                                .font(.title3.bold())
+                                .foregroundColor(.yellow)
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                        
+                        Divider().background(Color.gray)
+                        
+                        Text("Tap Frenzy Modes")
+                            .font(.title2.bold())
+                            .foregroundColor(.accentColor)
+                        
+                        VStack(spacing: 12) {
+                            ForEach(modes, id: \.0) { name, score in
+                                  HStack {
+                                      Text(name)
+                                          .foregroundColor(.white)
+                                      Spacer()
+                                      Text("\(score)")
+                                          .font(.headline)
+                                          .foregroundColor(.yellow)
+                                  }
+                                  .padding()
+                                  .background(Color.gray.opacity(0.15))
+                                  .cornerRadius(10)
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                
+                Button("Dismiss") {
+                    dismiss()
+                }
+                .font(.title3.bold())
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.accentColor)
+                .foregroundColor(.black)
+                .clipShape(Capsule())
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
         }
     }
 }

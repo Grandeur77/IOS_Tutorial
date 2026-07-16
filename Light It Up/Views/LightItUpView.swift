@@ -179,8 +179,10 @@ struct LightItUpView: View {
             highScore = score
             newHighScore = true
         }
+        
+        // Save the completed game session
+        GameSessionStore.saveSession(mode: .lightItUp, score: score)
     }
-
     func restartGame() {
         startTimer()
     }

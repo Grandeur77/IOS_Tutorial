@@ -295,9 +295,24 @@ struct TapFrenzyGameView: View {
         lastTapTime = nil
         stopAllTimers()
         if score > highScore {
+            UserDefaults.standard.set(score, forKey: "TapFrenzyHighScore_\(mode.rawValue)")
             highScore = score
             newHighScore = true
         }
+        
+        // Map the TapFrenzy sub-mode to our unified GameMode enum
+        let mappedMode: GameMode
+        switch mode {
+        case .combo: mappedMode = .tapFrenzyCombo
+        case .trapColour: mappedMode = .tapFrenzyTrap
+        case .moving: mappedMode = .tapFrenzyMoving
+        case .shrinking: mappedMode = .tapFrenzyShrinking
+        case .burst: mappedMode = .tapFrenzyBurst
+        default: mappedMode = .tapFrenzyDefault
+        }
+        
+        // Save the completed game session
+        GameSessionStore.saveSession(mode: mappedMode, score: score)
     }
     
     func restart() {

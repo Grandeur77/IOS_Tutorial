@@ -109,12 +109,15 @@ class QuizViewModel: ObservableObject {
         self.selectedAnswer = nil
         if self.currentIndex + 1 < self.questions.count {
             self.currentIndex += 1
-            self.startQuestionTimer() // Start timer for the next question
+            self.startQuestionTimer()
         } else {
             self.isQuizFinished = true
             if self.score > self.highScore {
                 UserDefaults.standard.set(self.score, forKey: "QuizRushHighScore")
             }
+            
+            // Save the completed game session
+            GameSessionStore.saveSession(mode: .quizRush, score: self.score)
         }
     }
     

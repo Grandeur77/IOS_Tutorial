@@ -1,7 +1,11 @@
 import SwiftUI
-import AudioToolbox // <-- Added to trigger test sounds
+import AudioToolbox
 
 struct SettingsTab: View {
+    @Binding var isGuestMode: Bool
+    
+    @AppStorage("IsUserLoggedIn") private var isUserLoggedIn = false
+    
     // Player Profile States
     @AppStorage("PlayerDisplayName") private var displayName = "Guest"
     @State private var tempName = ""
@@ -27,10 +31,9 @@ struct SettingsTab: View {
                 Color.black.ignoresSafeArea()
                 
                 Form {
-                    // SECTION 1: Player Profile
+                    // Player Profile
                     Section(header: Text("Player Profile").foregroundColor(.accentColor)) {
                         HStack(spacing: 16) {
-                            // Avatar Icon Box
                             Image(systemName: "person.crop.circle.badge.checkmark.fill")
                                 .font(.system(size: 32))
                                 .foregroundColor(.accentColor)
@@ -49,7 +52,6 @@ struct SettingsTab: View {
                         }
                         .padding(.vertical, 4)
                         
-                        // Edit display name field
                         TextField("Display Name", text: $tempName)
                             .foregroundColor(.white)
                             .submitLabel(.done)
@@ -64,14 +66,19 @@ struct SettingsTab: View {
                         .font(.subheadline.bold())
                         .foregroundColor(.accentColor)
                         
+                        // Log Out button
                         Button("Log Out", role: .destructive) {
                             displayName = "Guest"
                             tempName = ""
+                            withAnimation {
+                                isUserLoggedIn = false
+                                isGuestMode = false
+                            }
                         }
                     }
                     .listRowBackground(Color.white.opacity(0.04))
                     
-                    // SECTION 2: Gameplay Settings
+                    // Gameplay Settings
                     Section(header: Text("Gameplay").foregroundColor(.accentColor), footer: Text("Round length adjusts Light It Up level-up thresholds.").foregroundColor(.gray)) {
                         Picker("Round Length", selection: $roundLengthSeconds) {
                             Text("30 Seconds").tag(30.0)
@@ -83,7 +90,7 @@ struct SettingsTab: View {
                     .listRowBackground(Color.white.opacity(0.04))
                     .foregroundColor(.white)
                     
-                    // SECTION 3: Sound & Haptics
+                    // Sound & Haptics
                     Section(header: Text("Sound & Haptics").foregroundColor(.accentColor)) {
                         Toggle(isOn: $isSoundEnabled) {
                             Label("Game Sounds", systemImage: "speaker.wave.3.fill")
@@ -104,7 +111,7 @@ struct SettingsTab: View {
                     .listRowBackground(Color.white.opacity(0.04))
                     .foregroundColor(.white)
                     
-                    // SECTION 4: Daily Reminder Notifications
+                    // Daily Reminder Notifications
                     Section(header: Text("Daily Reminders").foregroundColor(.accentColor)) {
                         Toggle(isOn: $isReminderEnabled) {
                             Label("Enable Daily Reminder", systemImage: "bell.fill")
@@ -133,7 +140,7 @@ struct SettingsTab: View {
                     .listRowBackground(Color.white.opacity(0.04))
                     .foregroundColor(.white)
                     
-                    // SECTION 5: Danger Zone
+                    // Danger Zone
                     Section(header: Text("Danger Zone").foregroundColor(.red)) {
                         Button(role: .destructive, action: {
                             showResetConfirmation = true
@@ -174,14 +181,11 @@ struct SettingsTab: View {
         selectedTime = Calendar.current.date(from: components) ?? Date()
     }
     
-    // System Sound and Haptic alert test callback
     private func triggerTestAlert() {
         if isSoundEnabled {
-            // Plays a standard system notification sound (1004 is mail sent alert sound)
             AudioServicesPlaySystemSound(1004)
         }
         if isHapticsEnabled {
-            // Trigger a physical vibration pop
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
         }
@@ -202,6 +206,12 @@ struct SettingsTab: View {
         NotificationService.shared.cancelDailyReminders()
         displayName = "Guest"
         tempName = ""
+        
+        // Return to login screen after reset
+        withAnimation {
+            isUserLoggedIn = false
+            isGuestMode = false
+        }
     }
     
     private func hideKeyboard() {
@@ -210,5 +220,5 @@ struct SettingsTab: View {
 }
 
 #Preview {
-    SettingsTab()
+    SettingsTab(isGuestMode: .constant(false)) 
 }

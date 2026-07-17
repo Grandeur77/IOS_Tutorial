@@ -13,124 +13,200 @@ struct LoginView: View {
     @State private var alertMessage = ""
     @State private var showAlert = false
     
+    // Focus states to trigger neon highlights on textfields
+    enum Field {
+        case username, password
+    }
+    @FocusState private var focusedField: Field?
+    
+    // Background animation states for the mesh blobs
+    @State private var animateBlob = false
+    
     var body: some View {
         ZStack {
+            // Solid Black Base
             Color.black.ignoresSafeArea()
             
-            VStack(spacing: 36) {
-                Spacer()
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.18))
+                    .frame(width: 320, height: 320)
+                    .blur(radius: 90)
+                    .offset(x: animateBlob ? -70 : 70, y: animateBlob ? -90 : 90)
                 
-                // Iconic Arcade Logo/Header
-                VStack(spacing: 12) {
-                    Image(systemName: "gamecontroller.fill")
-                        .font(.system(size: 64))
-                        .foregroundColor(.accentColor)
-                        .shadow(color: .accentColor.opacity(0.6), radius: 10)
-                    
-                    Text("GAME ARCADIA")
-                        .font(.system(size: 34, weight: .black, design: .monospaced))
-                        .foregroundColor(.yellow)
-                        .tracking(4)
-                        .shadow(color: Color.yellow.opacity(0.6), radius: 8)
-                    
-                    Text(isSignUpMode ? "Create your local arcade account" : "Sign in to record your stats")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                Circle()
+                    .fill(Color.yellow.opacity(0.10))
+                    .frame(width: 280, height: 280)
+                    .blur(radius: 80)
+                    .offset(x: animateBlob ? 90 : -90, y: animateBlob ? 110 : -110)
+            }
+            .onAppear {
+                withAnimation(.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
+                    animateBlob.toggle()
                 }
-                
-                // Input Fields
-                VStack(spacing: 16) {
-                    // Username / Email input field
-                    HStack {
-                        Image(systemName: "envelope.fill")
-                            .foregroundColor(.accentColor)
-                            .frame(width: 20)
-                        
-                        TextField("Username or Email", text: $username)
-                            .foregroundColor(.white)
-                            .autocapitalization(.none)
-                            .disableAutocorrection(true)
-                    }
-                    .padding()
-                    .background(Color.white.opacity(0.04))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
-                    )
+            }
+            .ignoresSafeArea()
+            
+            // Main Contents
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 38) {
+                    Spacer()
+                        .frame(height: 40)
                     
-                    // Password input field
-                    HStack {
-                        Image(systemName: "lock.fill")
+                    // Logo Section
+                    VStack(spacing: 16) {
+                        Image(systemName: "gamecontroller.fill")
+                            .font(.system(size: 56))
                             .foregroundColor(.accentColor)
-                            .frame(width: 20)
+                            .shadow(color: .accentColor.opacity(0.5), radius: 12)
                         
-                        SecureField("Password", text: $password)
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(Color.white.opacity(0.04))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
-                    )
-                }
-                .padding(.horizontal, 24)
-                
-                // Action Buttons
-                VStack(spacing: 16) {
-                    // Action Trigger
-                    Button(action: handleAction) {
-                        Text(isSignUpMode ? "Create Account" : "Insert Coin & Login")
-                            .font(.headline.bold())
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .cornerRadius(12)
-                            .shadow(color: .accentColor.opacity(0.4), radius: 8)
-                    }
-                    .padding(.horizontal, 24)
-                    
-                    // Mode Toggle Button
-                    Button(action: {
-                        withAnimation {
-                            isSignUpMode.toggle()
-                        }
-                    }) {
-                        Text(isSignUpMode ? "Already have an account? Log In" : "Don't have an account? Sign Up")
-                            .font(.subheadline)
+                        Text("GAME ARCADIA")
+                            .font(.system(size: 30, weight: .black, design: .monospaced))
+                            .foregroundColor(.yellow)
+                            .tracking(5)
+                            .shadow(color: Color.yellow.opacity(0.5), radius: 8)
+                        
+                        Text(isSignUpMode ? "Create your local arcade account" : "Sign in to record your stats")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundColor(.gray)
                     }
-                }
-                
-                Spacer()
-                
-                // Guest Mode Entry button
-                Button(action: {
-                    displayName = "Guest"
-                    withAnimation {
-                        isGuestMode = true
+                    
+                    VStack(spacing: 24) {
+                        VStack(spacing: 16) {
+                            
+                            // Username Input Field
+                            HStack(spacing: 12) {
+                                Image(systemName: "envelope.fill")
+                                    .font(.subheadline)
+                                    .foregroundColor(focusedField == .username ? .accentColor : .gray)
+                                
+                                TextField(
+                                    "",
+                                    text: $username,
+                                    prompt: Text("Username or Email")
+                                        .foregroundColor(.white.opacity(0.35))
+                                )
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .focusedFieldBind(.username, binding: $focusedField)
+                            }
+                            .padding()
+                            .background(Color.white.opacity(0.03))
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(
+                                        focusedField == .username ? Color.accentColor : Color.white.opacity(0.08),
+                                        lineWidth: 1
+                                    )
+                                    .shadow(color: focusedField == .username ? .accentColor.opacity(0.25) : .clear, radius: 4)
+                            )
+                            .animation(.easeOut(duration: 0.2), value: focusedField)
+                            
+                            // Password Input Field
+                            HStack(spacing: 12) {
+                                Image(systemName: "lock.fill")
+                                    .font(.subheadline)
+                                    .foregroundColor(focusedField == .password ? .accentColor : .gray)
+                                
+                                SecureField(
+                                    "",
+                                    text: $password,
+                                    prompt: Text("Password")
+                                        .foregroundColor(.white.opacity(0.35))
+                                )
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .focusedFieldBind(.password, binding: $focusedField)
+                            }
+                            .padding()
+                            .background(Color.white.opacity(0.03))
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(
+                                        focusedField == .password ? Color.accentColor : Color.white.opacity(0.08),
+                                        lineWidth: 1
+                                    )
+                                    .shadow(color: focusedField == .password ? .accentColor.opacity(0.25) : .clear, radius: 4)
+                            )
+                            .animation(.easeOut(duration: 0.2), value: focusedField)
+                        }
+                        
+                        Button(action: handleAction) {
+                            Text(isSignUpMode ? "CREATE ACCOUNT" : "LOGIN")
+                                .font(.system(.headline, design: .monospaced).bold())
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        colors: [.yellow, Color.orange.opacity(0.9)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .cornerRadius(14)
+                                .shadow(color: .yellow.opacity(0.45), radius: 8)
+                        }
+                        
+                        // Toggle Mode Link
+                        Button(action: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                isSignUpMode.toggle()
+                            }
+                        }) {
+                            Text(isSignUpMode ? "Already have an account? Log In" : "Don't have an account? Sign Up")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.gray)
+                        }
                     }
-                }) {
-                    HStack(spacing: 6) {
-                        Text("Play as Guest")
-                            .fontWeight(.semibold)
-                        Image(systemName: "chevron.right")
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(.yellow)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.yellow.opacity(0.08))
-                    .cornerRadius(20)
+                    .padding(24)
+                    .background(Color.white.opacity(0.03))
+                    .cornerRadius(24)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(Color.yellow.opacity(0.3), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 24)
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [.accentColor.opacity(0.5), .yellow.opacity(0.2)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.5
+                            )
                     )
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                        .frame(height: 10)
+                    
+                    // Guest Option
+                    Button(action: {
+                        displayName = "Guest"
+                        withAnimation {
+                            isGuestMode = true
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Text("Play as Guest")
+                                .font(.system(size: 13, weight: .bold))
+                            Image(systemName: "chevron.right")
+                                .font(.caption.bold())
+                        }
+                        .foregroundColor(.yellow)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(Color.yellow.opacity(0.06))
+                        .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .strokeBorder(Color.yellow.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    .padding(.bottom, 20)
                 }
-                .padding(.bottom, 24)
             }
         }
         .alert(isPresented: $showAlert) {
@@ -142,7 +218,6 @@ struct LoginView: View {
         }
     }
     
-    // Handles registration and authentication checks
     private func handleAction() {
         let u = username.trimmingCharacters(in: .whitespacesAndNewlines)
         let p = password.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -176,6 +251,13 @@ struct LoginView: View {
                 showAlert = true
             }
         }
+    }
+}
+
+// Focused field bind extension
+extension View {
+    func focusedFieldBind(_ field: LoginView.Field, binding: FocusState<LoginView.Field?>.Binding) -> some View {
+        self.focused(binding, equals: field)
     }
 }
 

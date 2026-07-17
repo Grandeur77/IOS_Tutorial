@@ -23,7 +23,11 @@ struct SettingsTab: View {
     @AppStorage("DailyReminderMinute") private var reminderMinute = 0
     
     @State private var selectedTime: Date = Date()
+    
+    // Alerts
     @State private var showResetConfirmation = false
+    @State private var showErrorAlert = false
+    @State private var alertMessage = ""
     
     var body: some View {
         NavigationStack {
@@ -45,7 +49,8 @@ struct SettingsTab: View {
                                 Text(displayName)
                                     .font(.headline)
                                     .foregroundColor(.white)
-                                Text("Guest Account")
+                                // Shows account status dynamically
+                                Text(isUserLoggedIn ? "Registered Account" : "Guest Account")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
@@ -56,17 +61,28 @@ struct SettingsTab: View {
                             .foregroundColor(.white)
                             .submitLabel(.done)
                         
+                        // Updates username in local database
                         Button("Save Display Name") {
                             let trimmed = tempName.trimmingCharacters(in: .whitespacesAndNewlines)
                             if !trimmed.isEmpty {
-                                displayName = trimmed
+                                if isUserLoggedIn {
+                                    let oldName = displayName
+                                    let success = AuthService.shared.updateUsername(from: oldName, to: trimmed)
+                                    if success {
+                                        displayName = trimmed
+                                    } else {
+                                        alertMessage = "Username already exists. Please choose a different one."
+                                        showErrorAlert = true
+                                    }
+                                } else {
+                                    displayName = trimmed
+                                }
                             }
                             hideKeyboard()
                         }
                         .font(.subheadline.bold())
                         .foregroundColor(.accentColor)
                         
-                        // Log Out button
                         Button("Log Out", role: .destructive) {
                             displayName = "Guest"
                             tempName = ""
@@ -152,6 +168,11 @@ struct SettingsTab: View {
                     .listRowBackground(Color.white.opacity(0.04))
                 }
                 .scrollContentBackground(.hidden)
+                .alert("Error Updating Name", isPresented: $showErrorAlert) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text(alertMessage)
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -207,7 +228,6 @@ struct SettingsTab: View {
         displayName = "Guest"
         tempName = ""
         
-        // Return to login screen after reset
         withAnimation {
             isUserLoggedIn = false
             isGuestMode = false
@@ -220,5 +240,5 @@ struct SettingsTab: View {
 }
 
 #Preview {
-    SettingsTab(isGuestMode: .constant(false)) 
+    SettingsTab(isGuestMode: .constant(false))
 }

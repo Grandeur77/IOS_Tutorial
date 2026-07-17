@@ -57,4 +57,30 @@ class AuthService {
         
         return false
     }
+    
+    // Updates the user name
+    func updateUsername(from oldName: String, to newName: String) -> Bool {
+        let oldLower = oldName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let newLower = newName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !oldLower.isEmpty && !newLower.isEmpty else { return false }
+        guard oldLower != newLower else { return true } // No change needed
+        
+        var users = loadUsers()
+        
+        // Block change if the target username is already registered to someone else
+        if users[newLower] != nil {
+            return false
+        }
+        
+        // Rename key in dictionary
+        if let password = users[oldLower] {
+            users[newLower] = password
+            users.removeValue(forKey: oldLower)
+            saveUsers(users)
+            return true
+        }
+        
+        return false
+    }
 }

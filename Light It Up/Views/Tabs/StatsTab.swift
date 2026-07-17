@@ -113,15 +113,15 @@ struct StatsTab: View {
                                 .chartXAxis {
                                     AxisMarks(values: .automatic) { _ in
                                         AxisValueLabel()
-                                            .foregroundStyle(Color.white.opacity(0.8)) // Clear white numbers
+                                            .foregroundStyle(Color.white.opacity(0.8))
                                     }
                                 }
                                 .chartYAxis {
                                     AxisMarks(values: .automatic) { _ in
                                         AxisGridLine()
-                                            .foregroundStyle(Color.white.opacity(0.1)) // Subtle grid lines
+                                            .foregroundStyle(Color.white.opacity(0.1))
                                         AxisValueLabel()
-                                            .foregroundStyle(Color.white.opacity(0.8)) // Clear white numbers
+                                            .foregroundStyle(Color.white.opacity(0.8))
                                     }
                                 }
                                 .frame(height: 180)

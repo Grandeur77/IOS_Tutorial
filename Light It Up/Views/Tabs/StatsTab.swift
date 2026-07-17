@@ -12,9 +12,17 @@ enum GameModeCategory: String, CaseIterable, Identifiable {
 // Main Stats Tab View
 struct StatsTab: View {
     @StateObject private var viewModel = StatsVM()
-    @State private var selectedChartMode: GameModeCategory = .tapFrenzy // Selected chart mode
+    @State private var selectedChartMode: GameModeCategory = .tapFrenzy
     
-    // Raw session history based on the selected picker category
+    func colorForGameName(_ name: String) -> Color {
+        switch name {
+        case "Light It Up": return .accentColor
+        case "Quiz Rush": return .purple
+        case "Tap Frenzy": return .yellow
+        default: return .gray
+        }
+    }
+    
     var filteredSessions: [GameSession] {
         viewModel.sessions.filter { session in
             switch selectedChartMode {
@@ -54,19 +62,29 @@ struct StatsTab: View {
                         }
                         .padding(.horizontal)
                         
-                        // Bar Chart Section (session improvements)
+                        // Trend Bar Chart Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("SCORE TREND (LAST 10 GAMES)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
                             
-                            Picker("Game Mode", selection: $selectedChartMode) {
+                            // Custom Segmented Picker
+                            HStack(spacing: 8) {
                                 ForEach(GameModeCategory.allCases) { category in
-                                    Text(category.rawValue).tag(category)
+                                    Button(action: {
+                                        selectedChartMode = category
+                                    }) {
+                                        Text(category.rawValue)
+                                            .font(.caption.bold())
+                                            .foregroundColor(selectedChartMode == category ? .black : .white)
+                                            .padding(.vertical, 8)
+                                            .frame(maxWidth: .infinity)
+                                            .background(selectedChartMode == category ? Color.accentColor : Color.white.opacity(0.06))
+                                            .cornerRadius(8)
+                                    }
                                 }
                             }
-                            .pickerStyle(.segmented)
                             .padding(.horizontal)
                             
                             if filteredSessions.isEmpty {
@@ -91,6 +109,21 @@ struct StatsTab: View {
                                         .cornerRadius(4)
                                     }
                                 }
+                                // Style X & Y Axis labels
+                                .chartXAxis {
+                                    AxisMarks(values: .automatic) { _ in
+                                        AxisValueLabel()
+                                            .foregroundStyle(Color.white.opacity(0.8)) // Clear white numbers
+                                    }
+                                }
+                                .chartYAxis {
+                                    AxisMarks(values: .automatic) { _ in
+                                        AxisGridLine()
+                                            .foregroundStyle(Color.white.opacity(0.1)) // Subtle grid lines
+                                        AxisValueLabel()
+                                            .foregroundStyle(Color.white.opacity(0.8)) // Clear white numbers
+                                    }
+                                }
                                 .frame(height: 180)
                                 .padding()
                                 .background(Color.white.opacity(0.03))
@@ -99,7 +132,7 @@ struct StatsTab: View {
                             }
                         }
                         
-                        // Donut Chart Section (game play distribution)
+                        // Donut Chart Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("GAME PLAY POPULARITY (DISTRIBUTION)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
@@ -118,16 +151,43 @@ struct StatsTab: View {
                                 .cornerRadius(14)
                                 .padding(.horizontal)
                             } else {
-                                Chart(viewModel.gameDistribution) { item in
-                                    SectorMark(
-                                        angle: .value("Games Played", item.count),
-                                        innerRadius: .ratio(0.6),
-                                        angularInset: 2.0
-                                    )
-                                    .foregroundStyle(by: .value("Game", item.name))
-                                    .cornerRadius(6)
+                                VStack(spacing: 12) {
+                                    Chart(viewModel.gameDistribution) { item in
+                                        SectorMark(
+                                            angle: .value("Games Played", item.count),
+                                            innerRadius: .ratio(0.6),
+                                            angularInset: 2.0
+                                        )
+                                        .foregroundStyle(colorForGameName(item.name))
+                                        .cornerRadius(6)
+                                    }
+                                    .chartLegend(.hidden)
+                                    .frame(height: 160)
+                                    
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        ForEach(viewModel.gameDistribution) { item in
+                                            HStack(spacing: 8) {
+                                                Circle()
+                                                    .fill(colorForGameName(item.name))
+                                                    .frame(width: 8, height: 8)
+                                                
+                                                Text(item.name)
+                                                    .font(.caption.bold())
+                                                    .foregroundColor(.white)
+                                                
+                                                Spacer()
+                                                
+                                                // Calculates percentage ratios (count / total * 100)
+                                                let percent = Double(item.count) / Double(viewModel.totalGamesPlayed) * 100
+                                                Text(String(format: "%.0f%% (%d games)", percent, item.count))
+                                                    .font(.caption.monospacedDigit())
+                                                    .foregroundColor(.yellow)
+                                            }
+                                            .padding(.horizontal, 8)
+                                        }
+                                    }
+                                    .padding(.top, 4)
                                 }
-                                .frame(height: 180)
                                 .padding()
                                 .background(Color.white.opacity(0.03))
                                 .cornerRadius(14)
@@ -174,8 +234,8 @@ struct StatsTab: View {
                             .padding(.horizontal)
                         }
                     }
-                    .padding(.top, 24) // Clear the top navigation bar
-                    .padding(.bottom, 110) // Clear the bottom floating Tab Bar
+                    .padding(.top, 24)
+                    .padding(.bottom, 110)
                 }
             }
             .navigationTitle("Arcade Stats")
@@ -266,3 +326,4 @@ struct PersonalBestRow: View {
         )
     }
 }
+

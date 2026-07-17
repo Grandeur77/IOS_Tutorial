@@ -1,7 +1,32 @@
 import SwiftUI
+import Charts
 
+enum GameModeCategory: String, CaseIterable, Identifiable {
+    case tapFrenzy = "Tap Frenzy"
+    case lightItUp = "Light It Up"
+    case quizRush = "Quiz Rush"
+    
+    var id: String { self.rawValue }
+}
+
+// Main Stats Tab View
 struct StatsTab: View {
     @StateObject private var viewModel = StatsVM()
+    @State private var selectedChartMode: GameModeCategory = .tapFrenzy // Selected chart mode
+    
+    // Raw session history based on the selected picker category
+    var filteredSessions: [GameSession] {
+        viewModel.sessions.filter { session in
+            switch selectedChartMode {
+            case .tapFrenzy:
+                return session.mode.rawValue.contains("Tap Frenzy")
+            case .lightItUp:
+                return session.mode == .lightItUp
+            case .quizRush:
+                return session.mode == .quizRush
+            }
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -11,7 +36,7 @@ struct StatsTab: View {
                 ScrollView {
                     VStack(spacing: 28) {
                         
-                        // High-Level Summary Cards (Horizontal scroll)
+                        // High-Level Summary Cards
                         HStack(spacing: 16) {
                             StatSummaryCard(
                                 title: "Total Games",
@@ -29,10 +54,59 @@ struct StatsTab: View {
                         }
                         .padding(.horizontal)
                         
+                        // Interactive Charts Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("SCORE TREND (LAST 10 GAMES)")
+                                .font(.system(size: 11, weight: .bold).monospaced())
+                                .foregroundColor(.gray)
+                                .padding(.horizontal)
+                            
+                            // Segmented Filter Control
+                            Picker("Game Mode", selection: $selectedChartMode) {
+                                ForEach(GameModeCategory.allCases) { category in
+                                    Text(category.rawValue).tag(category)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.horizontal)
+                            
+                            if filteredSessions.isEmpty {
+                                // Fallback empty state
+                                VStack {
+                                    Text("No sessions played yet in this mode")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 180)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.white.opacity(0.03))
+                                .cornerRadius(14)
+                                .padding(.horizontal)
+                            } else {
+                              
+                                Chart {
+                                    // Take the last 10 sessions
+                                    ForEach(Array(filteredSessions.suffix(10).enumerated()), id: \.offset) { index, session in
+                                        BarMark(
+                                            x: .value("Game", "G\(index + 1)"), // X-Axis
+                                            y: .value("Score", session.score)  // Y-Axis
+                                        )
+                                        .foregroundStyle(Color.accentColor.gradient)
+                                        .cornerRadius(4)
+                                    }
+                                }
+                                .frame(height: 180)
+                                .padding()
+                                .background(Color.white.opacity(0.03))
+                                .cornerRadius(14)
+                                .padding(.horizontal)
+                            }
+                        }
+                        
                         // Personal Bests Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("PERSONAL BESTS")
-                                .font(.system(size: 12, weight: .bold).monospaced())
+                                .font(.system(size: 11, weight: .bold).monospaced())
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
                             
@@ -51,7 +125,6 @@ struct StatsTab: View {
                                     color: .accentColor
                                 )
                                 
-                                // Displays the best score
                                 PersonalBestRow(
                                     title: "Tap Frenzy",
                                     score: max(
@@ -70,6 +143,7 @@ struct StatsTab: View {
                         }
                     }
                     .padding(.top)
+                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Arcade Stats")
@@ -81,7 +155,7 @@ struct StatsTab: View {
     }
 }
 
-// Summary Card Component
+// Helper Summary Card Component
 struct StatSummaryCard: View {
     let title: String
     let value: String
@@ -116,7 +190,7 @@ struct StatSummaryCard: View {
     }
 }
 
-// Personal Best List Row
+// Helper Personal Best Row Component
 struct PersonalBestRow: View {
     let title: String
     let score: Int

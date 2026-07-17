@@ -201,65 +201,20 @@ struct QuizRushView: View {
     
     // MARK: - Celebratory Results Screen
     private var resultsView: some View {
-        ZStack {
-            VStack(spacing: 28) {
-                Text("Congratulations!")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
-                    .foregroundColor(.yellow)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 40)
-                
-                Text("You did an amazing job and earned")
-                    .font(.title3)
-                    .foregroundColor(.white.opacity(0.8))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                VStack(spacing: 12) {
-                    Text("\(viewModel.score)")
-                        .font(.system(size: 80, weight: .black, design: .rounded))
-                        .foregroundColor(.yellow)
-                        .shadow(color: .yellow.opacity(0.4), radius: 10)
-                    
-                    Text("Points")
-                        .font(.headline)
-                        .foregroundColor(.white.opacity(0.6))
-                        .textCase(.uppercase)
+        ResultView(
+            gameModeName: "Quiz Rush",
+            score: viewModel.score,
+            highScore: viewModel.highScore,
+            newHighScore: viewModel.score > viewModel.highScore && viewModel.score > 0,
+            onRestart: {
+                Task {
+                    await viewModel.loadQuestions()
                 }
-                .frame(width: 220, height: 220)
-                .background(
-                    Circle()
-                        .fill(Color.gray.opacity(0.12))
-                        .overlay(Circle().stroke(Color.yellow.opacity(0.3), lineWidth: 4))
-                )
-                .padding(.vertical, 20)
-                
-                Spacer()
-                
-                Button("Play Again") {
-                    Task {
-                        await viewModel.loadQuestions()
-                    }
-                }
-                .font(.title3.bold())
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.accentColor)
-                .foregroundColor(.white)
-                .clipShape(Capsule())
-                .padding(.horizontal)
-                
-                Button("Back to Hub") {
-                    dismiss()
-                }
-                .foregroundColor(.accentColor)
-                .font(.body.bold())
-                .padding(.bottom, 20)
+            },
+            onExit: {
+                dismiss()
             }
-            
-            // Confetti View overlays automatically on load
-            ConfettiView()
-        }
+        )
     }
     
     private func errorView(_ message: String) -> some View {

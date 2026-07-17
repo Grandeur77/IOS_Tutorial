@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct LightItUpView: View {
+    @Environment(\.dismiss) var dismiss // Hides screen and goes back to HomeTab
+    
     @State private var gameTimeRemaining: Double = 60.0
     @State private var litCardIndices: Set<Int> = []
     @State private var litTimeRemaining: Double = 1.5
@@ -15,88 +17,72 @@ struct LightItUpView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            VStack(spacing: 24) {
-                Text("Light It Up")
-                    .font(.largeTitle.bold())
-                    .foregroundColor(.white)
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Level: \(currentLevel.name)")
-                            .font(.headline)
-                            .foregroundColor(.accentColor)
-                        Text(String(format: "Round Time: %.1fs", gameTimeRemaining))
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.8))
+            
+            // If game over, show the shared ResultView
+            if isGameOver {
+                ResultView(
+                    gameModeName: "Light It Up",
+                    score: score,
+                    highScore: highScore,
+                    newHighScore: newHighScore,
+                    onRestart: {
+                        restartGame()
+                    },
+                    onExit: {
+                        dismiss()
                     }
-                    Spacer()
-                    Text("Score: \(score)")
-                        .font(.title2.bold())
+                )
+            } else {
+                // Normal Gameplay View
+                VStack(spacing: 24) {
+                    Text("Light It Up")
+                        .font(.largeTitle.bold())
                         .foregroundColor(.white)
-                }
-                .padding(.horizontal)
-
-                ZStack {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: currentLevel.columns), spacing: 12) {
-                        ForEach(0..<currentLevel.totalCards, id: \.self) { idx in
-                            CardView(isLit: litCardIndices.contains(idx), showMissed: showMissed && litCardIndices.contains(idx))
-                                .onTapGesture {
-                                    cardTapped(idx: idx)
-                                }
-                                .animation(.easeInOut, value: litCardIndices)
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Level: \(currentLevel.name)")
+                                .font(.headline)
+                                .foregroundColor(.accentColor)
+                            Text(String(format: "Round Time: %.1fs", gameTimeRemaining))
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
                         }
-                    }
-                    .padding()
-                    .disabled(isGameOver)
-
-                    if isGameOver {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(.ultraThinMaterial)
-                            .ignoresSafeArea()
-                        VStack(spacing: 18) {
-                            Text("Game Over!")
-                                .font(.largeTitle.bold())
-                                .foregroundColor(.white)
-                            Text("Final Score: \(score)")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                            if newHighScore {
-                                Text("New High Score!")
-                                    .font(.headline.bold())
-                                    .foregroundColor(.accentColor)
-                            } else {
-                                Text("High Score: \(highScore)")
-                                    .font(.headline)
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
-                            Button("Restart") {
-                                restartGame()
-                            }
-                            .padding()
-                            .background(Color.accentColor)
+                        Spacer()
+                        Text("Score: \(score)")
+                            .font(.title2.bold())
                             .foregroundColor(.white)
-                            .clipShape(Capsule())
-                            .shadow(radius: 6)
+                    }
+                    .padding(.horizontal)
+
+                    ZStack {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: currentLevel.columns), spacing: 12) {
+                            ForEach(0..<currentLevel.totalCards, id: \.self) { idx in
+                                CardView(isLit: litCardIndices.contains(idx), showMissed: showMissed && litCardIndices.contains(idx))
+                                    .onTapGesture {
+                                        cardTapped(idx: idx)
+                                    }
+                                    .animation(.easeInOut, value: litCardIndices)
+                            }
                         }
                         .padding()
                     }
-                }
-                
-                VStack(spacing: 8) {
-                    Text(String(format: "Lit Time Left: %.1fs", max(0, litTimeRemaining)))
-                        .font(.caption.monospacedDigit())
-                        .foregroundColor(.yellow)
-                        .opacity(isGameOver ? 0 : 1)
                     
-                    ProgressView(value: max(0, litTimeRemaining), total: currentLevel.litWindow)
-                        .progressViewStyle(LinearProgressViewStyle())
-                        .frame(height: 12)
-                        .padding([.horizontal])
-                        .opacity(isGameOver ? 0 : 1)
-                        .tint(Color.accentColor)
+                    VStack(spacing: 8) {
+                        Text(String(format: "Lit Time Left: %.1fs", max(0, litTimeRemaining)))
+                            .font(.caption.monospacedDigit())
+                            .foregroundColor(.yellow)
+                        
+                        ProgressView(value: max(0, litTimeRemaining), total: currentLevel.litWindow)
+                            .progressViewStyle(LinearProgressViewStyle())
+                            .frame(height: 12)
+                            .padding([.horizontal])
+                            .tint(Color.accentColor)
+                    }
                 }
             }
         }
+        .navigationBarBackButtonHidden(true) // Prevent accidental exit mid-game
         .onAppear {
             startTimer()
         }
@@ -179,18 +165,19 @@ struct LightItUpView: View {
             highScore = score
             newHighScore = true
         }
-        
-        // Save the completed game session
         GameSessionStore.saveSession(mode: .lightItUp, score: score)
     }
+
     func restartGame() {
         startTimer()
     }
 }
 
+// Card View Component
 struct CardView: View {
     let isLit: Bool
     let showMissed: Bool
+    
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
             .fill(showMissed ? Color.red : (isLit ? Color.accentColor : Color.gray.opacity(0.5)))

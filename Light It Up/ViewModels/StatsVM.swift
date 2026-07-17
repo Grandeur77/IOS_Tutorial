@@ -1,6 +1,12 @@
 import SwiftUI
 import Combine
 
+struct GameDistribution: Identifiable {
+    let id = UUID()
+    let name: String
+    let count: Int
+}
+
 class StatsVM: ObservableObject {
     // array for reload changes automatically
     @Published var sessions: [GameSession] = []
@@ -32,4 +38,24 @@ class StatsVM: ObservableObject {
     var recentSessions: [GameSession] {
         Array(sessions.sorted(by: { $0.timestamp > $1.timestamp }).prefix(5))
     }
+    
+    // game distribution
+    var gameDistribution: [GameDistribution] {
+        let lightItUpCount = sessions.filter { $0.mode == .lightItUp }.count
+        let quizRushCount = sessions.filter { $0.mode == .quizRush }.count
+        let tapFrenzyCount = sessions.filter { $0.mode.rawValue.contains("Tap Frenzy") }.count
+        
+        var distribution: [GameDistribution] = []
+        if lightItUpCount > 0 {
+            distribution.append(GameDistribution(name: "Light It Up", count: lightItUpCount))
+        }
+        if quizRushCount > 0 {
+            distribution.append(GameDistribution(name: "Quiz Rush", count: quizRushCount))
+        }
+        if tapFrenzyCount > 0 {
+            distribution.append(GameDistribution(name: "Tap Frenzy", count: tapFrenzyCount))
+        }
+        return distribution
+    }
 }
+

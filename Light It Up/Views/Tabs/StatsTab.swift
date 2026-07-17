@@ -29,133 +29,166 @@ struct StatsTab: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 28) {
-                        
-                        // High-Level Summary Cards
-                        HStack(spacing: 16) {
-                            StatSummaryCard(
-                                title: "Total Games",
-                                value: "\(viewModel.totalGamesPlayed)",
-                                icon: "gamecontroller.fill",
-                                color: .accentColor
-                            )
+            NavigationStack {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    
+                    ScrollView {
+                        VStack(spacing: 28) {
                             
-                            StatSummaryCard(
-                                title: "Avg Score",
-                                value: String(format: "%.1f", viewModel.averageScore),
-                                icon: "chart.bar.fill",
-                                color: .yellow
-                            )
-                        }
-                        .padding(.horizontal)
-                        
-                        // Interactive Charts Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("SCORE TREND (LAST 10 GAMES)")
-                                .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.gray)
-                                .padding(.horizontal)
-                            
-                            // Segmented Filter Control
-                            Picker("Game Mode", selection: $selectedChartMode) {
-                                ForEach(GameModeCategory.allCases) { category in
-                                    Text(category.rawValue).tag(category)
-                                }
+                            // High-Level Summary Cards
+                            HStack(spacing: 16) {
+                                StatSummaryCard(
+                                    title: "Total Games",
+                                    value: "\(viewModel.totalGamesPlayed)",
+                                    icon: "gamecontroller.fill",
+                                    color: .accentColor
+                                )
+                                
+                                StatSummaryCard(
+                                    title: "Avg Score",
+                                    value: String(format: "%.1f", viewModel.averageScore),
+                                    icon: "chart.bar.fill",
+                                    color: .yellow
+                                )
                             }
-                            .pickerStyle(.segmented)
                             .padding(.horizontal)
                             
-                            if filteredSessions.isEmpty {
-                                // Fallback empty state
-                                VStack {
-                                    Text("No sessions played yet in this mode")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                                .frame(height: 180)
-                                .frame(maxWidth: .infinity)
-                                .background(Color.white.opacity(0.03))
-                                .cornerRadius(14)
-                                .padding(.horizontal)
-                            } else {
-                              
-                                Chart {
-                                    // Take the last 10 sessions
-                                    ForEach(Array(filteredSessions.suffix(10).enumerated()), id: \.offset) { index, session in
-                                        BarMark(
-                                            x: .value("Game", "G\(index + 1)"), // X-Axis
-                                            y: .value("Score", session.score)  // Y-Axis
-                                        )
-                                        .foregroundStyle(Color.accentColor.gradient)
-                                        .cornerRadius(4)
+                            // Bar Chart Section (session improvements)
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("SCORE TREND (LAST 10 GAMES)")
+                                    .font(.system(size: 11, weight: .bold).monospaced())
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal)
+                                
+                                Picker("Game Mode", selection: $selectedChartMode) {
+                                    ForEach(GameModeCategory.allCases) { category in
+                                        Text(category.rawValue).tag(category)
                                     }
                                 }
-                                .frame(height: 180)
-                                .padding()
-                                .background(Color.white.opacity(0.03))
-                                .cornerRadius(14)
+                                .pickerStyle(.segmented)
                                 .padding(.horizontal)
+                                
+                                if filteredSessions.isEmpty {
+                                    VStack {
+                                        Text("No sessions played yet in this mode")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .frame(height: 180)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.white.opacity(0.03))
+                                    .cornerRadius(14)
+                                    .padding(.horizontal)
+                                } else {
+                                    Chart {
+                                        ForEach(Array(filteredSessions.suffix(10).enumerated()), id: \.offset) { index, session in
+                                            BarMark(
+                                                x: .value("Game", "G\(index + 1)"),
+                                                y: .value("Score", session.score)
+                                            )
+                                            .foregroundStyle(Color.accentColor.gradient)
+                                            .cornerRadius(4)
+                                        }
+                                    }
+                                    .frame(height: 180)
+                                    .padding()
+                                    .background(Color.white.opacity(0.03))
+                                    .cornerRadius(14)
+                                    .padding(.horizontal)
+                                }
                             }
-                        }
-                        
-                        // Personal Bests Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("PERSONAL BESTS")
-                                .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.gray)
-                                .padding(.horizontal)
                             
-                            VStack(spacing: 12) {
-                                PersonalBestRow(
-                                    title: "Light It Up",
-                                    score: viewModel.personalBest(for: .lightItUp),
-                                    icon: "lightbulb.fill",
-                                    color: .accentColor
-                                )
+                            // Donut Chart Section (game play distribution)
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("GAME PLAY POPULARITY (DISTRIBUTION)")
+                                    .font(.system(size: 11, weight: .bold).monospaced())
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal)
                                 
-                                PersonalBestRow(
-                                    title: "Quiz Rush",
-                                    score: viewModel.personalBest(for: .quizRush),
-                                    icon: "questionmark.circle.fill",
-                                    color: .accentColor
-                                )
+                                if viewModel.gameDistribution.isEmpty {
+                                    VStack {
+                                        Text("Play a game to see distribution stats")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .frame(height: 180)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.white.opacity(0.03))
+                                    .cornerRadius(14)
+                                    .padding(.horizontal)
+                                } else {
+                                    Chart(viewModel.gameDistribution) { item in
                                 
-                                PersonalBestRow(
-                                    title: "Tap Frenzy",
-                                    score: max(
-                                        viewModel.personalBest(for: .tapFrenzyDefault),
-                                        viewModel.personalBest(for: .tapFrenzyCombo),
-                                        viewModel.personalBest(for: .tapFrenzyTrap),
-                                        viewModel.personalBest(for: .tapFrenzyMoving),
-                                        viewModel.personalBest(for: .tapFrenzyShrinking),
-                                        viewModel.personalBest(for: .tapFrenzyBurst)
-                                    ),
-                                    icon: "hand.tap.fill",
-                                    color: .accentColor
-                                )
+                                        SectorMark(
+                                            angle: .value("Games Played", item.count),
+                                            innerRadius: .ratio(0.6),
+                                            angularInset: 2.0
+                                        )
+                                        .foregroundStyle(by: .value("Game", item.name))
+                                        .cornerRadius(6)
+                                    }
+                                    .frame(height: 180)
+                                    .padding()
+                                    .background(Color.white.opacity(0.03))
+                                    .cornerRadius(14)
+                                    .padding(.horizontal)
+                                }
                             }
-                            .padding(.horizontal)
+                            
+                            // Personal Bests Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("PERSONAL BESTS")
+                                    .font(.system(size: 11, weight: .bold).monospaced())
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal)
+                                
+                                VStack(spacing: 12) {
+                                    PersonalBestRow(
+                                        title: "Light It Up",
+                                        score: viewModel.personalBest(for: .lightItUp),
+                                        icon: "lightbulb.fill",
+                                        color: .accentColor
+                                    )
+                                    
+                                    PersonalBestRow(
+                                        title: "Quiz Rush",
+                                        score: viewModel.personalBest(for: .quizRush),
+                                        icon: "questionmark.circle.fill",
+                                        color: .accentColor
+                                    )
+                                    
+                                    PersonalBestRow(
+                                        title: "Tap Frenzy",
+                                        score: max(
+                                            viewModel.personalBest(for: .tapFrenzyDefault),
+                                            viewModel.personalBest(for: .tapFrenzyCombo),
+                                            viewModel.personalBest(for: .tapFrenzyTrap),
+                                            viewModel.personalBest(for: .tapFrenzyMoving),
+                                            viewModel.personalBest(for: .tapFrenzyShrinking),
+                                            viewModel.personalBest(for: .tapFrenzyBurst)
+                                        ),
+                                        icon: "hand.tap.fill",
+                                        color: .accentColor
+                                    )
+                                }
+                                .padding(.horizontal)
+                            }
                         }
+                        .padding(.top)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.top)
-                    .padding(.bottom, 20)
                 }
-            }
-            .navigationTitle("Arcade Stats")
-            .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                viewModel.refresh()
+                .navigationTitle("Arcade Stats")
+                .navigationBarTitleDisplayMode(.inline)
+                .onAppear {
+                    viewModel.refresh()
+                }
             }
         }
     }
-}
 
-// Helper Summary Card Component
+// Summary Card Component
 struct StatSummaryCard: View {
     let title: String
     let value: String
@@ -190,7 +223,7 @@ struct StatSummaryCard: View {
     }
 }
 
-// Helper Personal Best Row Component
+// Personal Best Row Component
 struct PersonalBestRow: View {
     let title: String
     let score: Int

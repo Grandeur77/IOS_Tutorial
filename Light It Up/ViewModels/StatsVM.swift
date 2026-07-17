@@ -7,8 +7,15 @@ struct GameDistribution: Identifiable {
     let count: Int
 }
 
+// Leaderboard Entry Model
+struct LeaderboardEntry: Identifiable {
+    let id = UUID()
+    let username: String
+    let score: Int
+}
+
 class StatsVM: ObservableObject {
-    // array for reload changes automatically
+    // reload changes automatically
     @Published var sessions: [GameSession] = []
     
     // reloads the sessions from GameSessionStore
@@ -16,7 +23,7 @@ class StatsVM: ObservableObject {
         self.sessions = GameSessionStore.loadSessions()
     }
     
-    // total played game count calculation
+    // total played game count
     var totalGamesPlayed: Int {
         sessions.count
     }
@@ -57,5 +64,31 @@ class StatsVM: ObservableObject {
         }
         return distribution
     }
+    
+    // player leaderboard scores
+    func leaderboard(for category: GameModeCategory) -> [LeaderboardEntry] {
+        let filtered: [GameSession]
+        switch category {
+        case .tapFrenzy:
+            filtered = sessions.filter { $0.mode.rawValue.contains("Tap Frenzy") }
+        case .lightItUp:
+            filtered = sessions.filter { $0.mode == .lightItUp }
+        case .quizRush:
+            filtered = sessions.filter { $0.mode == .quizRush }
+        }
+        
+        // Group by username and find the maximum score achieved by each player
+        var userBests: [String: Int] = [:]
+        for session in filtered {
+            let name = session.username ?? "Guest"
+            let best = userBests[name] ?? 0
+            if session.score > best {
+                userBests[name] = session.score
+            }
+        }
+        
+        // Convert to ranked entries sorted by score descending
+        let entries = userBests.map { LeaderboardEntry(username: $0.key, score: $0.value) }
+        return entries.sorted { $0.score > $1.score }
+    }
 }
-

@@ -8,6 +8,7 @@ struct GameSession: Identifiable, Codable {
     let timestamp: Date
     let latitude: Double?
     let longitude: Double?
+    let username: String?
 }
 
 class GameSessionStore {
@@ -20,13 +21,17 @@ class GameSessionStore {
         // Fetch current coordinates from LocationService singleton
         let currentLocation = LocationService.shared.lastLocation
         
+        // Fetch the active player's name from AppStorage
+        let activeUsername = UserDefaults.standard.string(forKey: "PlayerDisplayName") ?? "Guest"
+        
         let newSession = GameSession(
             id: UUID(),
             mode: mode,
             score: score,
             timestamp: Date(),
             latitude: currentLocation?.coordinate.latitude,
-            longitude: currentLocation?.coordinate.longitude
+            longitude: currentLocation?.coordinate.longitude,
+            username: activeUsername 
         )
         
         sessions.append(newSession)

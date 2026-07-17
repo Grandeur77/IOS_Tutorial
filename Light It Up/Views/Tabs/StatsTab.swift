@@ -13,7 +13,8 @@ enum GameModeCategory: String, CaseIterable, Identifiable {
 struct StatsTab: View {
     @StateObject private var viewModel = StatsVM()
     @State private var selectedChartMode: GameModeCategory = .tapFrenzy
-    
+    @State private var selectedLeaderboardMode: GameModeCategory = .tapFrenzy
+
     func colorForGameName(_ name: String) -> Color {
         switch name {
         case "Light It Up": return .accentColor
@@ -68,8 +69,7 @@ struct StatsTab: View {
                                 .font(.system(size: 11, weight: .bold).monospaced())
                                 .foregroundColor(.gray)
                                 .padding(.horizontal)
-                            
-                            // Custom Segmented Picker
+                          
                             HStack(spacing: 8) {
                                 ForEach(GameModeCategory.allCases) { category in
                                     Button(action: {
@@ -109,7 +109,6 @@ struct StatsTab: View {
                                         .cornerRadius(4)
                                     }
                                 }
-                                // Style X & Y Axis labels
                                 .chartXAxis {
                                     AxisMarks(values: .automatic) { _ in
                                         AxisValueLabel()
@@ -132,7 +131,7 @@ struct StatsTab: View {
                             }
                         }
                         
-                        // Donut Chart Section
+                        // 3. Donut Chart Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("GAME PLAY POPULARITY (DISTRIBUTION)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
@@ -177,9 +176,8 @@ struct StatsTab: View {
                                                 
                                                 Spacer()
                                                 
-                                                // Calculates percentage ratios (count / total * 100)
                                                 let percent = Double(item.count) / Double(viewModel.totalGamesPlayed) * 100
-                                                Text(String(format: "%.0f%%", percent))
+                                                Text(String(format: "%.0f%% (%d games)", percent, item.count))
                                                     .font(.caption.monospacedDigit())
                                                     .foregroundColor(.yellow)
                                             }
@@ -191,6 +189,56 @@ struct StatsTab: View {
                                 .padding()
                                 .background(Color.white.opacity(0.03))
                                 .cornerRadius(14)
+                                .padding(.horizontal)
+                            }
+                        }
+                        
+                        // Dynamic Leaderboard Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("LEADERBOARD STANDINGS")
+                                .font(.system(size: 11, weight: .bold).monospaced())
+                                .foregroundColor(.gray)
+                                .padding(.horizontal)
+                            
+                            // Game buttons segment selector
+                            HStack(spacing: 8) {
+                                ForEach(GameModeCategory.allCases) { category in
+                                    Button(action: {
+                                        withAnimation {
+                                            selectedLeaderboardMode = category
+                                        }
+                                    }) {
+                                        Text(category.rawValue)
+                                            .font(.caption.bold())
+                                            .foregroundColor(selectedLeaderboardMode == category ? .black : .white)
+                                            .padding(.vertical, 8)
+                                            .frame(maxWidth: .infinity)
+                                            .background(selectedLeaderboardMode == category ? Color.accentColor : Color.white.opacity(0.06))
+                                            .cornerRadius(8)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                            
+                            let leaderboardData = viewModel.leaderboard(for: selectedLeaderboardMode)
+                            
+                            if leaderboardData.isEmpty {
+                                VStack {
+                                    Text("No leaderboard records yet")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 150)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.white.opacity(0.03))
+                                .cornerRadius(14)
+                                .padding(.horizontal)
+                            } else {
+                                VStack(spacing: 10) {
+                                    ForEach(Array(leaderboardData.enumerated()), id: \.element.id) { index, entry in
+                                        LeaderboardRow(rank: index + 1, entry: entry)
+                                    }
+                                }
                                 .padding(.horizontal)
                             }
                         }
@@ -243,6 +291,63 @@ struct StatsTab: View {
             .onAppear {
                 viewModel.refresh()
             }
+        }
+    }
+}
+
+// Leaderboard Row Component
+struct LeaderboardRow: View {
+    let rank: Int
+    let entry: LeaderboardEntry
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Rank Badge
+            ZStack {
+                if rank <= 3 {
+                    Image(systemName: "crown.fill")
+                        .font(.title3)
+                        .foregroundColor(rankColor)
+                } else {
+                    Circle()
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: 28, height: 28)
+                    Text("\(rank)")
+                        .font(.caption.bold())
+                        .foregroundColor(.gray)
+                }
+            }
+            .frame(width: 32, height: 32)
+            
+            Text(entry.username)
+                .font(.headline)
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Text("\(entry.score) pts")
+                .font(.system(.body, design: .monospaced).bold())
+                .foregroundColor(rank <= 3 ? .yellow : .white.opacity(0.8))
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(rank <= 3 ? Color.yellow.opacity(0.08) : Color.white.opacity(0.04))
+                .cornerRadius(8)
+        }
+        .padding()
+        .background(Color.white.opacity(0.03))
+        .cornerRadius(14)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+        )
+    }
+    
+    private var rankColor: Color {
+        switch rank {
+        case 1: return .yellow // Gold
+        case 2: return .gray.opacity(0.8)
+        case 3: return .orange.opacity(0.8)
+        default: return .clear
         }
     }
 }
@@ -326,4 +431,3 @@ struct PersonalBestRow: View {
         )
     }
 }
-

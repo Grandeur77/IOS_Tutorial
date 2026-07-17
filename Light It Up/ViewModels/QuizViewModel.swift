@@ -17,6 +17,9 @@ class QuizViewModel: ObservableObject {
     @Published var selectedAnswer: String? = nil
     @Published var answeredCorrectly: Bool? = nil
     
+    // Stores selected category ID
+    @Published var selectedGenreID: Int? = nil
+    
     // Time Attack properties
     @Published var questionTimeRemaining: Double = 10.0
     private var timer: Timer? = nil
@@ -28,7 +31,7 @@ class QuizViewModel: ObservableObject {
     private let networkService = NetworkService()
     
     @MainActor
-    func loadQuestions() async {
+    func loadQuestions(categoryID: Int? = nil) async {
         stopQuestionTimer()
         viewState = .loading
         isQuizFinished = false
@@ -39,8 +42,13 @@ class QuizViewModel: ObservableObject {
         selectedAnswer = nil
         answeredCorrectly = nil
         
+        // Cache the category ID if provided
+        if let categoryID = categoryID {
+            self.selectedGenreID = categoryID
+        }
+        
         do {
-            let fetchedQuestions = try await networkService.fetchQuestions()
+            let fetchedQuestions = try await networkService.fetchQuestions(categoryID: self.selectedGenreID)
             
             let displayable = fetchedQuestions.map { question in
                 DisplayableQuestion(
@@ -91,13 +99,13 @@ class QuizViewModel: ObservableObject {
         stopQuestionTimer()
         guard currentIndex < questions.count else { return }
         
-        // Timeout counts as incorrect answer
+        // Timeout counts
         answeredCorrectly = false
         selectedAnswer = "" // Empty indicates timeout
         streak = 0
         score = max(0, score - 3)
         
-        // Let the user see the correct answer briefly before advancing
+        // Let the user see the correct answer
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.advanceQuestion()
         }
@@ -126,7 +134,7 @@ class QuizViewModel: ObservableObject {
         stopQuestionTimer()
         questionTimeRemaining = 10.0
         
-        // Run timer on main actor thread so it updates UI safely
+        // Run timer on main actor thread
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             DispatchQueue.main.async {

@@ -1,9 +1,15 @@
 import Foundation
 
 class NetworkService {
-    private let urlString = "https://opentdb.com/api.php?amount=10&type=multiple"
-    
-    func fetchQuestions() async throws -> [Question] {
+    // An optional category ID filter
+    func fetchQuestions(categoryID: Int? = nil) async throws -> [Question] {
+        var urlString = "https://opentdb.com/api.php?amount=10&type=multiple"
+        
+        // User selected category 
+        if let categoryID = categoryID {
+            urlString += "&category=\(categoryID)"
+        }
+        
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
         }

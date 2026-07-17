@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 struct GameSession: Identifiable, Codable {
     let id: UUID
@@ -12,17 +13,20 @@ struct GameSession: Identifiable, Codable {
 class GameSessionStore {
     private static let userDefaultsKey = "SavedGameSessions"
     
-    // Add a new game session to the array in UserDefaults
+    // Add a new game session
     static func saveSession(mode: GameMode, score: Int) {
         var sessions = loadSessions()
+        
+        // Fetch current coordinates from LocationService singleton
+        let currentLocation = LocationService.shared.lastLocation
         
         let newSession = GameSession(
             id: UUID(),
             mode: mode,
             score: score,
             timestamp: Date(),
-            latitude: nil,
-            longitude: nil
+            latitude: currentLocation?.coordinate.latitude,
+            longitude: currentLocation?.coordinate.longitude
         )
         
         sessions.append(newSession)

@@ -23,8 +23,11 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
-        // Tint color applies a unified theme to the active tab item
         .tint(.accentColor)
+        .onAppear {
+            // Request location permissions immediately on launch
+            LocationService.shared.requestPermission()
+        }
     }
 }
 

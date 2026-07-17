@@ -179,7 +179,7 @@ struct StatsTab: View {
                                                 
                                                 // Calculates percentage ratios (count / total * 100)
                                                 let percent = Double(item.count) / Double(viewModel.totalGamesPlayed) * 100
-                                                Text(String(format: "%.0f%% (%d games)", percent, item.count))
+                                                Text(String(format: "%.0f%%", percent))
                                                     .font(.caption.monospacedDigit())
                                                     .foregroundColor(.yellow)
                                             }

@@ -43,10 +43,12 @@ struct TapFrenzyView: View {
 }
 
 struct TapFrenzyGameView: View {
+    @Environment(\.dismiss) var dismiss // returning to the Hub
+    
     let mode: TapFrenzyMode
     let onExit: () -> Void
     @State private var score: Int = 0
-    @AppStorage("TapFrenzyHighScore_temp") private var highScore: Int = 0
+    @State private var highScore: Int = 0
     @State private var timeLeft: Double = 10
     @State private var isGameOver: Bool = false
     @State private var timer: Timer? = nil
@@ -68,115 +70,103 @@ struct TapFrenzyGameView: View {
     init(mode: TapFrenzyMode, onExit: @escaping () -> Void) {
         self.mode = mode
         self.onExit = onExit
-        self._highScore = AppStorage(wrappedValue: 0, "TapFrenzyHighScore_\(mode.rawValue)")
+        let storedHighScore = UserDefaults.standard.integer(forKey: "TapFrenzyHighScore_\(mode.rawValue)")
+        self._highScore = State(initialValue: storedHighScore)
     }
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            VStack(spacing: 40) {
-                HStack(spacing: 10) {
-                    Text("Score: \(score)")
-                        .font(.title)
-                        .foregroundColor(.white)
-                    if mode == .combo, multiplier > 1 {
-                        Text("×\(multiplier)")
-                            .font(.title2.bold())
-                            .foregroundColor(.accentColor)
-                            .transition(.scale)
-                            .animation(.spring(), value: multiplier)
+            
+            // If game over, show the shared ResultView
+            if isGameOver {
+                ResultView(
+                    gameModeName: "Tap Frenzy (\(mode.rawValue))",
+                    score: score,
+                    highScore: highScore,
+                    newHighScore: newHighScore,
+                    onRestart: {
+                        restart()
+                    },
+                    onExit: {
+                        dismiss()
                     }
+                )
+            } else {
+                // Normal Gameplay View
+                VStack(spacing: 40) {
+                    HStack(spacing: 10) {
+                        Text("Score: \(score)")
+                            .font(.title)
+                            .foregroundColor(.white)
+                        if mode == .combo, multiplier > 1 {
+                            Text("×\(multiplier)")
+                                .font(.title2.bold())
+                                .foregroundColor(.accentColor)
+                                .transition(.scale)
+                                .animation(.spring(), value: multiplier)
+                        }
+                        Spacer()
+                        Text(String(format: "%.1f", timeLeft))
+                            .font(.title2.monospacedDigit())
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Capsule().fill(Color.accentColor.opacity(0.2)))
+                    }
+                    .padding([.top, .horizontal])
                     Spacer()
-                    Text(String(format: "%.1f", timeLeft))
-                        .font(.title2.monospacedDigit())
-                        .foregroundColor(.white)
-                        .padding(8)
-                        .background(Capsule().fill(Color.accentColor.opacity(0.2)))
-                }
-                .padding([.top, .horizontal])
-                Spacer()
-                GeometryReader { geo in
-                    ZStack {
-                        if mode == .moving {
-                            Button(action: { tapAction() }) {
-                                Text("TAP")
-                                    .font(.system(size: 48, weight: .black, design: .rounded))
-                                    .frame(width: maxButtonSize, height: maxButtonSize)
-                                    .background(Color.accentColor)
-                                    .foregroundColor(.white)
-                                    .clipShape(Circle())
-                                    .shadow(radius: isGameOver ? 0 : 16)
-                            }
-                            .disabled(isGameOver)
-                            .position(x: geo.size.width * buttonPosition.x,
-                                      y: geo.size.height * buttonPosition.y)
-                        } else {
-                            Button(action: { tapAction() }) {
-                                Text("TAP")
-                                    .font(.system(size: 48, weight: .black, design: .rounded))
-                                    .frame(width: buttonSize, height: buttonSize)
-                                    .background(currentButtonColor)
-                                    .foregroundColor(.white)
-                                    .clipShape(Circle())
-                                    .shadow(radius: isGameOver ? 0 : 16)
-                                    .overlay(
-                                        Group {
-                                            if burstActive && mode == .burst {
-                                                Circle().stroke(Color.yellow, lineWidth: 7).scaleEffect(1.1)
-                                                    .opacity(0.7)
+                    GeometryReader { geo in
+                        ZStack {
+                            if mode == .moving {
+                                Button(action: { tapAction() }) {
+                                    Text("TAP")
+                                        .font(.system(size: 48, weight: .black, design: .rounded))
+                                        .frame(width: maxButtonSize, height: maxButtonSize)
+                                        .background(Color.accentColor)
+                                        .foregroundColor(.white)
+                                        .clipShape(Circle())
+                                        .shadow(radius: isGameOver ? 0 : 16)
+                                }
+                                .disabled(isGameOver)
+                                .position(x: geo.size.width * buttonPosition.x,
+                                          y: geo.size.height * buttonPosition.y)
+                            } else {
+                                Button(action: { tapAction() }) {
+                                    Text("TAP")
+                                        .font(.system(size: 48, weight: .black, design: .rounded))
+                                        .frame(width: buttonSize, height: buttonSize)
+                                        .background(currentButtonColor)
+                                        .foregroundColor(.white)
+                                        .clipShape(Circle())
+                                        .shadow(radius: isGameOver ? 0 : 16)
+                                        .overlay(
+                                            Group {
+                                                if burstActive && mode == .burst {
+                                                    Circle().stroke(Color.yellow, lineWidth: 7).scaleEffect(1.1)
+                                                        .opacity(0.7)
+                                                }
                                             }
-                                        }
-                                    )
+                                        )
+                                }
+                                .disabled(isGameOver)
+                                .frame(width: geo.size.width, height: geo.size.height)
                             }
-                            .disabled(isGameOver)
-                            .frame(width: geo.size.width, height: geo.size.height)
                         }
                     }
-                }
-                .frame(height: 350)
-                Spacer()
-                ProgressView(value: timeLeft, total: 10)
-                    .progressViewStyle(LinearProgressViewStyle())
-                    .frame(height: 12)
-                    .padding([.horizontal])
-                    .tint(Color.accentColor)
-                Button("Back") {
-                    stopAllTimers()
-                    onExit()
-                }
-                .padding()
-                .foregroundColor(.accentColor)
-            }
-            if isGameOver {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
-                    .ignoresSafeArea()
-                VStack(spacing: 18) {
-                    Text("Time's up!")
-                        .font(.largeTitle.bold())
-                        .foregroundColor(.white)
-                    Text("Final Score: \(score)")
-                        .font(.title)
-                        .foregroundColor(.white)
-                    if newHighScore {
-                        Text("New High Score!")
-                            .font(.headline.bold())
-                            .foregroundColor(.accentColor)
-                    } else {
-                        Text("High Score: \(highScore)")
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                    Button("Play Again") {
-                        restart()
+                    .frame(height: 350)
+                    Spacer()
+                    ProgressView(value: timeLeft, total: 10)
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .frame(height: 12)
+                        .padding([.horizontal])
+                        .tint(Color.accentColor)
+                    Button("Back") {
+                        stopAllTimers()
+                        onExit()
                     }
                     .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
-                    .shadow(radius: 6)
+                    .foregroundColor(.accentColor)
                 }
-                .padding()
             }
         }
         .onAppear { startTimer() }
@@ -294,13 +284,15 @@ struct TapFrenzyGameView: View {
         multiplier = 1
         lastTapTime = nil
         stopAllTimers()
+        
+        let oldHighScore = highScore
         if score > highScore {
             UserDefaults.standard.set(score, forKey: "TapFrenzyHighScore_\(mode.rawValue)")
             highScore = score
             newHighScore = true
         }
         
-        // Map the TapFrenzy sub-mode to our unified GameMode enum
+        // Map submode to GameMode
         let mappedMode: GameMode
         switch mode {
         case .combo: mappedMode = .tapFrenzyCombo
@@ -311,7 +303,7 @@ struct TapFrenzyGameView: View {
         default: mappedMode = .tapFrenzyDefault
         }
         
-        // Save the completed game session
+        // Save Session
         GameSessionStore.saveSession(mode: mappedMode, score: score)
     }
     

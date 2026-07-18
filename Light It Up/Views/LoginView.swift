@@ -12,19 +12,16 @@ struct LoginView: View {
     
     @State private var alertMessage = ""
     @State private var showAlert = false
-    
-    // Focus states to trigger neon highlights on textfields
+
     enum Field {
         case username, password
     }
     @FocusState private var focusedField: Field?
     
-    // Background animation states for the mesh blobs
     @State private var animateBlob = false
     
     var body: some View {
         ZStack {
-            // Solid Black Base
             Color.black.ignoresSafeArea()
             
             ZStack {

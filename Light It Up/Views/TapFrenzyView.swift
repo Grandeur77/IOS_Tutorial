@@ -1,13 +1,33 @@
 import SwiftUI
 
+// Local Sub-Mode Helper Model
+struct TapFrenzySubMode: Identifiable {
+    let mode: TapFrenzyMode
+    let icon: String
+    let description: String
+    
+    var id: String { mode.rawValue }
+    
+    static let allSubModes: [TapFrenzySubMode] = [
+        TapFrenzySubMode(mode: .`default`, icon: "hand.tap.fill", description: "Standard clicking challenge."),
+        TapFrenzySubMode(mode: .combo, icon: "multiply", description: "Tap rapidly to increase multipliers."),
+        TapFrenzySubMode(mode: .trapColour, icon: "exclamationmark.triangle.fill", description: "Avoid tapping when color turns gray."),
+        TapFrenzySubMode(mode: .moving, icon: "scope", description: "The button teleports around the screen."),
+        TapFrenzySubMode(mode: .shrinking, icon: "arrow.down.right.and.arrow.up.left", description: "The button gets smaller over time."),
+        TapFrenzySubMode(mode: .burst, icon: "sparkles", description: "Double points when yellow ring glows.")
+    ]
+}
+
 struct TapFrenzyView: View {
     @State private var selectedMode: TapFrenzyMode? = nil
+    @State private var localSelection: TapFrenzySubMode? = nil
 
     var body: some View {
         Group {
             if let mode = selectedMode {
                 TapFrenzyGameView(mode: mode) {
                     selectedMode = nil
+                    localSelection = nil
                 }
             } else {
                 modePicker
@@ -18,32 +38,120 @@ struct TapFrenzyView: View {
     var modePicker: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            VStack(spacing: 28) {
-                Text("Tap Frenzy")
-                    .font(.largeTitle.bold())
-                    .foregroundColor(.white)
-                Text("Choose Game Mode")
-                    .font(.title2)
-                    .foregroundColor(.accentColor)
-                ForEach(TapFrenzyMode.allCases) { mode in
-                    Button(mode.rawValue) {
-                        selectedMode = mode
-                    }
-                    .font(.title3.bold())
-                    .padding(.horizontal, 40)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
-                    .shadow(radius: 4)
+            
+            VStack(spacing: 32) {
+                Spacer()
+                    .frame(height: 10)
+              
+                VStack(spacing: 12) {
+                    Image(systemName: "hand.tap.fill")
+                        .font(.system(size: 54))
+                        .foregroundColor(.accentColor)
+                        .shadow(color: .accentColor.opacity(0.4), radius: 8)
+                    
+                    Text("TAP FRENZY")
+                        .font(.system(size: 30, weight: .black, design: .monospaced))
+                        .foregroundColor(.yellow)
+                        .tracking(5)
+                        .shadow(color: Color.yellow.opacity(0.4), radius: 8)
+                    
+                    Text("Select a sub-mode to challenge")
+                        .font(.caption)
+                        .foregroundColor(.gray)
                 }
+                
+                // Selection Grid
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 16) {
+                    ForEach(TapFrenzySubMode.allSubModes) { sub in
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                localSelection = sub
+                            }
+                        }) {
+                            VStack(spacing: 12) {
+                                Image(systemName: sub.icon)
+                                    .font(.title2)
+                                    .foregroundColor(localSelection?.id == sub.id ? .yellow : .white.opacity(0.6))
+                                
+                                Text(sub.mode.rawValue)
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                
+                                Text(sub.description)
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.gray)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                            }
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 10)
+                            .frame(maxWidth: .infinity, minHeight: 110)
+                            .background(Color.white.opacity(localSelection?.id == sub.id ? 0.06 : 0.03))
+                            .cornerRadius(18)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .strokeBorder(
+                                        localSelection?.id == sub.id ? Color.yellow : Color.white.opacity(0.08),
+                                        lineWidth: localSelection?.id == sub.id ? 2 : 1
+                                    )
+                                    .shadow(color: localSelection?.id == sub.id ? .yellow.opacity(0.3) : .clear, radius: 4)
+                            )
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                
+                Spacer()
+                
+                // Start Button
+                VStack(spacing: 16) {
+                    Button(action: {
+                        if let sub = localSelection {
+                            withAnimation {
+                                selectedMode = sub.mode
+                            }
+                        }
+                    }) {
+                        Text("PLAY")
+                            .font(.system(.headline, design: .monospaced).bold())
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                Group {
+                                    if localSelection == nil {
+                                        Color.gray.opacity(0.3)
+                                    } else {
+                                        LinearGradient(
+                                            colors: [.yellow, Color.orange.opacity(0.9)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    }
+                                }
+                            )
+                            .cornerRadius(14)
+                            .shadow(color: localSelection == nil ? .clear : .yellow.opacity(0.4), radius: 6)
+                    }
+                    .disabled(localSelection == nil)
+                    .padding(.horizontal, 24)
+                    
+                    Button("Exit Game Hub") {
+                        selectedMode = nil
+                        localSelection = nil
+                    }
+                    .font(.subheadline.bold())
+                    .foregroundColor(.gray)
+                }
+                .padding(.bottom, 20)
             }
         }
     }
 }
 
+// MARK: - Game View
 struct TapFrenzyGameView: View {
-    @Environment(\.dismiss) var dismiss // returning to the Hub
+    @Environment(\.dismiss) var dismiss
     
     let mode: TapFrenzyMode
     let onExit: () -> Void
@@ -61,8 +169,8 @@ struct TapFrenzyGameView: View {
     @State private var isTrapGreen: Bool = false
     @State private var buttonPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
     @State private var targetMoveTimer: Timer? = nil
-    let minButtonSize: CGFloat = 60
-    let maxButtonSize: CGFloat = 170
+    let minButtonSize: CGFloat = 80
+    let maxButtonSize: CGFloat = 160
     @State private var burstActive: Bool = false
     @State private var burstUsed: Bool = false
     @State private var burstTimer: Timer? = nil
@@ -78,7 +186,6 @@ struct TapFrenzyGameView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             
-            // If game over, show the shared ResultView
             if isGameOver {
                 ResultView(
                     gameModeName: "Tap Frenzy (\(mode.rawValue))",
@@ -93,60 +200,52 @@ struct TapFrenzyGameView: View {
                     }
                 )
             } else {
-                // Normal Gameplay View
-                VStack(spacing: 40) {
-                    HStack(spacing: 10) {
-                        Text("Score: \(score)")
-                            .font(.title)
+                VStack(spacing: 36) {
+                    // Header Stats
+                    HStack(spacing: 12) {
+                        Text("SCORE: \(score)")
+                            .font(.system(.title2, design: .monospaced).bold())
                             .foregroundColor(.white)
+                        
                         if mode == .combo, multiplier > 1 {
                             Text("×\(multiplier)")
-                                .font(.title2.bold())
-                                .foregroundColor(.accentColor)
+                                .font(.title.bold())
+                                .foregroundColor(.yellow)
                                 .transition(.scale)
                                 .animation(.spring(), value: multiplier)
                         }
+                        
                         Spacer()
+                        
                         Text(String(format: "%.1f", timeLeft))
-                            .font(.title2.monospacedDigit())
+                            .font(.system(.title3, design: .monospaced).bold())
                             .foregroundColor(.white)
-                            .padding(8)
-                            .background(Capsule().fill(Color.accentColor.opacity(0.2)))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 14)
+                            .background(Color.white.opacity(0.04))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            )
                     }
                     .padding([.top, .horizontal])
+                    
                     Spacer()
+                    
+                    // Tap Area Frame
                     GeometryReader { geo in
                         ZStack {
                             if mode == .moving {
                                 Button(action: { tapAction() }) {
-                                    Text("TAP")
-                                        .font(.system(size: 48, weight: .black, design: .rounded))
-                                        .frame(width: maxButtonSize, height: maxButtonSize)
-                                        .background(Color.accentColor)
-                                        .foregroundColor(.white)
-                                        .clipShape(Circle())
-                                        .shadow(radius: isGameOver ? 0 : 16)
+                                    arcadeButton(size: maxButtonSize)
                                 }
                                 .disabled(isGameOver)
                                 .position(x: geo.size.width * buttonPosition.x,
                                           y: geo.size.height * buttonPosition.y)
                             } else {
                                 Button(action: { tapAction() }) {
-                                    Text("TAP")
-                                        .font(.system(size: 48, weight: .black, design: .rounded))
-                                        .frame(width: buttonSize, height: buttonSize)
-                                        .background(currentButtonColor)
-                                        .foregroundColor(.white)
-                                        .clipShape(Circle())
-                                        .shadow(radius: isGameOver ? 0 : 16)
-                                        .overlay(
-                                            Group {
-                                                if burstActive && mode == .burst {
-                                                    Circle().stroke(Color.yellow, lineWidth: 7).scaleEffect(1.1)
-                                                        .opacity(0.7)
-                                                }
-                                            }
-                                        )
+                                    arcadeButton(size: buttonSize)
                                 }
                                 .disabled(isGameOver)
                                 .frame(width: geo.size.width, height: geo.size.height)
@@ -154,23 +253,62 @@ struct TapFrenzyGameView: View {
                         }
                     }
                     .frame(height: 350)
+                    
                     Spacer()
+                    
+                    // Time Left Progress
                     ProgressView(value: timeLeft, total: 10)
                         .progressViewStyle(LinearProgressViewStyle())
-                        .frame(height: 12)
-                        .padding([.horizontal])
+                        .frame(height: 8)
+                        .padding(.horizontal, 24)
                         .tint(Color.accentColor)
-                    Button("Back") {
+                    
+                    Button("Back to Selector") {
                         stopAllTimers()
                         onExit()
                     }
-                    .padding()
-                    .foregroundColor(.accentColor)
+                    .font(.subheadline.bold())
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 8)
                 }
             }
         }
         .onAppear { startTimer() }
         .onDisappear { stopAllTimers() }
+    }
+
+    private func arcadeButton(size: CGFloat) -> some View {
+        let displayColor = currentButtonColor
+        return ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [displayColor, displayColor.opacity(0.85)],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: size / 2
+                    )
+                )
+                .overlay(
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.25), lineWidth: 4)
+                )
+                .shadow(color: displayColor.opacity(0.65), radius: 14)
+                .frame(width: size, height: size)
+            
+            Text("TAP")
+                .font(.system(size: size * 0.28, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+                .shadow(color: .black.opacity(0.5), radius: 2)
+            
+            if burstActive && mode == .burst {
+                Circle()
+                    .strokeBorder(Color.yellow, lineWidth: 6)
+                    .scaleEffect(1.08)
+                    .shadow(color: .yellow.opacity(0.6), radius: 6)
+                    .frame(width: size, height: size)
+            }
+        }
     }
     
     var buttonSize: CGFloat {
@@ -292,7 +430,6 @@ struct TapFrenzyGameView: View {
             newHighScore = true
         }
         
-        // Map submode to GameMode
         let mappedMode: GameMode
         switch mode {
         case .combo: mappedMode = .tapFrenzyCombo
@@ -303,7 +440,6 @@ struct TapFrenzyGameView: View {
         default: mappedMode = .tapFrenzyDefault
         }
         
-        // Save Session
         GameSessionStore.saveSession(mode: mappedMode, score: score)
     }
     

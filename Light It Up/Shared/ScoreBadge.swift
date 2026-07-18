@@ -19,11 +19,18 @@ struct ScoreBadge: View {
         .frame(minWidth: 120)
         .padding(.vertical, 16)
         .padding(.horizontal, 16)
-        .background(Color.white.opacity(0.04))
+        .background(Color.white.opacity(0.03)) // Glass backdrop
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(color.opacity(0.25), lineWidth: 1)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [color.opacity(0.4), Color.white.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
     }
 }

@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Quiz Genre Model
 struct QuizGenre: Identifiable {
     let id: Int
     let name: String

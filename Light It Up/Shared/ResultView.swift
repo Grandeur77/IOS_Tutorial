@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Confetti Particle Struct
+// Confetti Particle Struct
 struct ConfettiParticle: Identifiable {
     let id = UUID()
     let color: Color
@@ -10,7 +10,7 @@ struct ConfettiParticle: Identifiable {
     var rotation: Double
 }
 
-// MARK: - Custom Confetti View
+// Custom Confetti View
 struct ConfettiView: View {
     @State private var particles: [ConfettiParticle] = []
     let colors: [Color] = [.red, .blue, .green, .yellow, .pink, .purple, .orange]
@@ -32,18 +32,18 @@ struct ConfettiView: View {
             }
         }
         .ignoresSafeArea()
-        .allowsHitTesting(false) // Allows tapping buttons underneath the falling particles
+        .allowsHitTesting(false)
     }
     
     private func generateParticles(width: CGFloat, height: CGFloat) {
         var temp: [ConfettiParticle] = []
-        for _ in 0..<100 { // 100 pieces of confetti
+        for _ in 0..<100 {
             let size = CGFloat.random(in: 6...14)
             let particle = ConfettiParticle(
                 color: colors.randomElement() ?? .red,
                 size: size,
                 xOffset: CGFloat.random(in: 0...width),
-                yOffset: CGFloat.random(in: -height...0), // Start offscreen
+                yOffset: CGFloat.random(in: -height...0),
                 rotation: Double.random(in: 0...360)
             )
             temp.append(particle)
@@ -54,15 +54,15 @@ struct ConfettiView: View {
     private func triggerAnimation(height: CGFloat) {
         withAnimation(.easeOut(duration: 4.0)) {
             for i in 0..<particles.count {
-                particles[i].yOffset += height + 100 // Fall to bottom
-                particles[i].xOffset += CGFloat.random(in: -80...80) // Sway
-                particles[i].rotation += Double.random(in: 360...1080) // Spin
+                particles[i].yOffset += height + 100
+                particles[i].xOffset += CGFloat.random(in: -80...80)
+                particles[i].rotation += Double.random(in: 360...1080)
             }
         }
     }
 }
 
-// MARK: - Reusable Result View
+// Reusable Result View
 struct ResultView: View {
     let gameModeName: String
     let score: Int
@@ -103,50 +103,66 @@ struct ResultView: View {
                 }
                 
                 Spacer()
-                
-                // SwiftUI Native ShareLink
+
                 ShareLink(item: shareMessage) {
                     HStack(spacing: 8) {
                         Image(systemName: "square.and.arrow.up")
                         Text("Share Your Score")
                     }
-                    .font(.headline)
+                    .font(.system(.headline, design: .monospaced).bold())
                     .foregroundColor(.black)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.yellow)
-                    .cornerRadius(12)
-                    .shadow(color: .yellow.opacity(0.3), radius: 6)
+                    .background(
+                        LinearGradient(
+                            colors: [.yellow, Color.orange.opacity(0.9)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .cornerRadius(14)
+                    .shadow(color: .yellow.opacity(0.4), radius: 6)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
                 
                 // Control Buttons
-                VStack(spacing: 12) {
+                VStack(spacing: 14) {
                     Button(action: onRestart) {
                         Text("Play Again")
-                            .font(.headline)
-                            .foregroundColor(.white)
+                            .font(.system(.headline, design: .rounded).bold())
+                            .foregroundColor(.black)
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(Color.accentColor)
-                            .cornerRadius(12)
+                            .background(
+                                LinearGradient(
+                                    colors: [.accentColor, Color.blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .cornerRadius(14)
+                            .shadow(color: .accentColor.opacity(0.3), radius: 6)
                     }
                     
                     Button(action: onExit) {
                         Text("Back to Hub")
-                            .font(.headline)
-                            .foregroundColor(.gray)
+                            .font(.system(.headline, design: .rounded).bold())
+                            .foregroundColor(.white)
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(Color.white.opacity(0.06))
-                            .cornerRadius(12)
+                            .background(Color.white.opacity(0.03))
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            )
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
                 .padding(.bottom, 20)
             }
             
-            // Show confetti overlay ONLY when a new high score is achieved!
+            // Show confetti overlay 
             if newHighScore {
                 ConfettiView()
             }

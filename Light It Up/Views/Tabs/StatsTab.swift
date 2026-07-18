@@ -14,7 +14,7 @@ struct StatsTab: View {
     @StateObject private var viewModel = StatsVM()
     @State private var selectedChartMode: GameModeCategory = .tapFrenzy
     @State private var selectedLeaderboardMode: GameModeCategory = .tapFrenzy
-
+    
     func colorForGameName(_ name: String) -> Color {
         switch name {
         case "Light It Up": return .accentColor
@@ -63,13 +63,13 @@ struct StatsTab: View {
                         }
                         .padding(.horizontal)
                         
-                        // Trend Bar Chart Section
+                        // Score Trend Bar Chart
                         VStack(alignment: .leading, spacing: 16) {
                             Text("SCORE TREND (LAST 10 GAMES)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.gray)
+                                .foregroundColor(.yellow)
                                 .padding(.horizontal)
-                          
+                   
                             HStack(spacing: 8) {
                                 ForEach(GameModeCategory.allCases) { category in
                                     Button(action: {
@@ -127,15 +127,19 @@ struct StatsTab: View {
                                 .padding()
                                 .background(Color.white.opacity(0.03))
                                 .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                )
                                 .padding(.horizontal)
                             }
                         }
                         
-                        // 3. Donut Chart Section
+                        // Donut Distribution Chart Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("GAME PLAY POPULARITY (DISTRIBUTION)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.gray)
+                                .foregroundColor(.yellow)
                                 .padding(.horizontal)
                             
                             if viewModel.gameDistribution.isEmpty {
@@ -189,18 +193,21 @@ struct StatsTab: View {
                                 .padding()
                                 .background(Color.white.opacity(0.03))
                                 .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                )
                                 .padding(.horizontal)
                             }
                         }
                         
-                        // Dynamic Leaderboard Section
+                        // Leaderboard stand standings
                         VStack(alignment: .leading, spacing: 16) {
                             Text("LEADERBOARD STANDINGS")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.gray)
+                                .foregroundColor(.yellow)
                                 .padding(.horizontal)
                             
-                            // Game buttons segment selector
                             HStack(spacing: 8) {
                                 ForEach(GameModeCategory.allCases) { category in
                                     Button(action: {
@@ -243,11 +250,11 @@ struct StatsTab: View {
                             }
                         }
                         
-                        // Personal Bests Section
+                        // Personal Bests
                         VStack(alignment: .leading, spacing: 16) {
                             Text("PERSONAL BESTS")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.gray)
+                                .foregroundColor(.yellow)
                                 .padding(.horizontal)
                             
                             VStack(spacing: 12) {
@@ -302,7 +309,6 @@ struct LeaderboardRow: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // Rank Badge
             ZStack {
                 if rank <= 3 {
                     Image(systemName: "crown.fill")
@@ -338,16 +344,23 @@ struct LeaderboardRow: View {
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [rankColor.opacity(0.4), Color.white.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
     }
     
     private var rankColor: Color {
         switch rank {
-        case 1: return .yellow // Gold
+        case 1: return .yellow
         case 2: return .gray.opacity(0.8)
         case 3: return .orange.opacity(0.8)
-        default: return .clear
+        default: return Color.white.opacity(0.05)
         }
     }
 }
@@ -378,11 +391,18 @@ struct StatSummaryCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.white.opacity(0.04))
+        .background(Color.white.opacity(0.03))
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [color.opacity(0.4), Color.white.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
     }
 }
@@ -423,11 +443,18 @@ struct PersonalBestRow: View {
             .cornerRadius(8)
         }
         .padding()
-        .background(Color.white.opacity(0.04))
+        .background(Color.white.opacity(0.03)) 
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [color.opacity(0.3), Color.white.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
     }
 }

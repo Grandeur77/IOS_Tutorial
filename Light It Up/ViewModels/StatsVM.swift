@@ -41,7 +41,7 @@ class StatsVM: ObservableObject {
         return modeSessions.map { $0.score }.max() ?? 0
     }
     
-    // returns the 5 most recently played games
+    // recently played games
     var recentSessions: [GameSession] {
         Array(sessions.sorted(by: { $0.timestamp > $1.timestamp }).prefix(5))
     }

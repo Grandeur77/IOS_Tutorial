@@ -6,7 +6,7 @@ class NotificationService {
     
     private init() {}
     
-    // Request local notification permissions from the user (Alert, Sound, Badge)
+    // Request local notification permissions from the user
     func requestPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {

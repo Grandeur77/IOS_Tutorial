@@ -18,7 +18,7 @@ struct LightItUpView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             
-            // If game over, show the shared ResultView
+            // show the shared ResultView
             if isGameOver {
                 ResultView(
                     gameModeName: "Light It Up",
@@ -82,7 +82,7 @@ struct LightItUpView: View {
                 }
             }
         }
-        .navigationBarBackButtonHidden(true) // Prevent accidental exit mid-game
+        .navigationBarBackButtonHidden(true)
         .onAppear {
             startTimer()
         }

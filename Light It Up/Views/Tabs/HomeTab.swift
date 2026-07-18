@@ -11,15 +11,13 @@ struct HomeTab: View {
     @AppStorage("TapFrenzyHighScore_Shrinking Button") private var tfShrinkingScore: Int = 0
     @AppStorage("AppStorageKeyForTapFrenzyHighScore_Bonus Burst") private var tfBurstScore: Int = 0
     
-    // high score for all Tap Frenzy sub-modes
+    // Calculates highest score across Tap Frenzy
     var highestTapFrenzyScore: Int {
         max(tfDefaultScore, tfComboScore, tfTrapScore, tfMovingScore, tfShrinkingScore, tfBurstScore)
     }
     
-    //high scores for Light It Up
+    // Read high scores for other modes
     @AppStorage("LightItUpHighScore") private var lightItUpScore: Int = 0
-    
-    // high scores for Quiz Rush
     @AppStorage("QuizRushHighScore") private var quizRushScore: Int = 0
     
     var body: some View {
@@ -28,31 +26,24 @@ struct HomeTab: View {
                 Color.black.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Header
-                    VStack(spacing: 8) {
+
+                    VStack(spacing: 12) {
                         Text("GAME ARCADIA")
-                            .font(.system(size: 34, weight: .black, design: .monospaced))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.accentColor, .white],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .shadow(color: .accentColor.opacity(0.8), radius: 10)
-                            .tracking(4)
+                            .font(.system(size: 32, weight: .black, design: .monospaced))
+                            .foregroundColor(.yellow)
+                            .tracking(6)
+                            .shadow(color: Color.yellow.opacity(0.5), radius: 10)
                         
-                        Text("Select a challenge to begin")
-                            .font(.system(size: 10, weight: .bold).monospaced())
+                        Text("SELECT A CHALLENGE TO BEGIN")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundColor(.gray)
+                            .tracking(2)
                     }
                     .padding(.top, 40)
                     
                     Spacer()
                     
-                    // Centered game selector buttons
-                    VStack(spacing: 40) {
-                        // Tap Frenzy
+                    VStack(spacing: 24) {
                         GameCard(
                             title: "Tap Frenzy",
                             description: "Speed game. Smash the buttons fast.",
@@ -62,7 +53,6 @@ struct HomeTab: View {
                             selection = .tapFrenzy
                         }
                         
-                        // Light It Up
                         GameCard(
                             title: "Light It Up",
                             description: "Reflex game. Tap before it goes dark.",
@@ -72,7 +62,6 @@ struct HomeTab: View {
                             selection = .lightItUp
                         }
                         
-                        // Quiz Rush
                         GameCard(
                             title: "Quiz Rush",
                             description: "Trivia game. Answer under pressure.",
@@ -82,12 +71,11 @@ struct HomeTab: View {
                             selection = .quizRush
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 20)
                     
                     Spacer()
                 }
             }
-            // Navigation links for games
             .navigationDestination(isPresented: Binding(get: { selection == .tapFrenzy }, set: { if !$0 { selection = nil } })) {
                 TapFrenzyView()
             }
@@ -101,6 +89,7 @@ struct HomeTab: View {
     }
 }
 
+// Beautiful Glassmorphic Game Select Card Component
 struct GameCard: View {
     let title: String
     let description: String
@@ -110,56 +99,70 @@ struct GameCard: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 16) {
+            HStack(spacing: 18) {
+
                 Image(systemName: iconName)
-                    .font(.title3)
-                    .foregroundColor(.accentColor)
-                    .frame(width: 44, height: 44)
-                    .background(Color.accentColor.opacity(0.12))
-                    .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .strokeBorder(Color.accentColor.opacity(0.25), lineWidth: 1)
-                    )
+                    .font(.title2)
+                    .foregroundColor(.yellow)
+                    .frame(width: 50, height: 50)
+                    .background(Color.yellow.opacity(0.1))
+                    .cornerRadius(12)
+                    .shadow(color: .yellow.opacity(0.2), radius: 4)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title.uppercased())
+                        .font(.system(.headline, design: .monospaced).bold())
                         .foregroundColor(.white)
+                        .tracking(1)
                     
                     Text(description)
                         .font(.caption)
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(1)
+                        .lineLimit(2)
                 }
                 
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: 2) {
+                // High Score badge
+                VStack(alignment: .trailing, spacing: 4) {
                     Text("HI-SCORE")
                         .font(.system(size: 8, weight: .bold).monospaced())
-                        .foregroundColor(.yellow.opacity(0.7))
+                        .foregroundColor(.accentColor.opacity(0.8))
                     Text("\(highScore)")
-                        .font(.subheadline.bold().monospacedDigit())
-                        .foregroundColor(.yellow)
+                        .font(.system(.subheadline, design: .monospaced).bold())
+                        .foregroundColor(.accentColor)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.yellow.opacity(0.08))
-                .cornerRadius(6)
-                
-                Image(systemName: "chevron.right")
-                    .font(.caption.bold())
-                    .foregroundColor(.accentColor.opacity(0.5))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.accentColor.opacity(0.08))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.accentColor.opacity(0.2), lineWidth: 1)
+                )
             }
             .padding()
-            .frame(height: 80)
-            .background(Color.white.opacity(0.04))
-            .cornerRadius(12)
+            .background(
+                LinearGradient(
+                    colors: [Color.white.opacity(0.03), Color.white.opacity(0.01)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            ) // Glass backdrop
+            .cornerRadius(20)
+      
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Color.accentColor, lineWidth: 2)
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [.accentColor.opacity(0.4), .yellow.opacity(0.15)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .shadow(color: .accentColor.opacity(0.15), radius: 6)
             )
         }
     }

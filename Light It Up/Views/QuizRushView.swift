@@ -27,29 +27,49 @@ struct QuizRushView: View {
     @State private var shakeOffset: CGFloat = 0
     @State private var animateBlob = false
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.08)
+    }
+    
+    private var headerTextColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            baseBackgroundColor.ignoresSafeArea()
             
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.15))
-                    .frame(width: 300, height: 300)
-                    .blur(radius: 90)
-                    .offset(x: animateBlob ? -60 : 60, y: animateBlob ? -80 : 80)
-                
-                Circle()
-                    .fill(Color.purple.opacity(0.08))
-                    .frame(width: 250, height: 250)
-                    .blur(radius: 80)
-                    .offset(x: animateBlob ? 80 : -80, y: animateBlob ? 90 : -90)
-            }
-            .onAppear {
-                withAnimation(.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
-                    animateBlob.toggle()
+            if colorScheme == .dark {
+                ZStack {
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.15))
+                        .frame(width: 300, height: 300)
+                        .blur(radius: 90)
+                        .offset(x: animateBlob ? -60 : 60, y: animateBlob ? -80 : 80)
+                    
+                    Circle()
+                        .fill(Color.purple.opacity(0.08))
+                        .frame(width: 250, height: 250)
+                        .blur(radius: 80)
+                        .offset(x: animateBlob ? 80 : -80, y: animateBlob ? 90 : -90)
                 }
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
+                        animateBlob.toggle()
+                    }
+                }
+                .ignoresSafeArea()
             }
-            .ignoresSafeArea()
             
             // Router logic
             if !isGameStarted {
@@ -78,13 +98,13 @@ struct QuizRushView: View {
                 
                 Text("CHOOSE TOPIC")
                     .font(.system(size: 28, weight: .black, design: .monospaced))
-                    .foregroundColor(.yellow)
+                    .foregroundColor(headerTextColor)
                     .tracking(4)
-                    .shadow(color: Color.yellow.opacity(0.4), radius: 6)
+                    .shadow(color: headerTextColor.opacity(colorScheme == .light ? 0.2 : 0.4), radius: 6)
                 
                 Text("Select a genre to test your skills")
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
             }
             
             // Genres
@@ -98,22 +118,22 @@ struct QuizRushView: View {
                         VStack(spacing: 16) {
                             Image(systemName: genre.icon)
                                 .font(.title)
-                                .foregroundColor(selectedGenre?.id == genre.id ? genre.color : .white.opacity(0.6))
+                                .foregroundColor(selectedGenre?.id == genre.id ? genre.color : (colorScheme == .light ? Color.black.opacity(0.4) : .white.opacity(0.6)))
                             
                             Text(genre.name)
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .multilineTextAlignment(.center)
                         }
                         .padding(.vertical, 20)
                         .padding(.horizontal, 10)
                         .frame(maxWidth: .infinity, minHeight: 120)
-                        .background(Color.white.opacity(selectedGenre?.id == genre.id ? 0.06 : 0.03))
+                        .background(selectedGenre?.id == genre.id ? (colorScheme == .light ? Color.accentColor.opacity(0.1) : Color.white.opacity(0.06)) : cardBackgroundColor)
                         .cornerRadius(20)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
                                 .strokeBorder(
-                                    selectedGenre?.id == genre.id ? genre.color : Color.white.opacity(0.08),
+                                    selectedGenre?.id == genre.id ? genre.color : cardBorderColor,
                                     lineWidth: selectedGenre?.id == genre.id ? 2 : 1
                                 )
                                 .shadow(color: selectedGenre?.id == genre.id ? genre.color.opacity(0.3) : .clear, radius: 4)
@@ -145,7 +165,7 @@ struct QuizRushView: View {
                         .background(
                             Group { // <-- Wrapped in Group to compile-safely return different view types
                                 if selectedGenre == nil {
-                                    Color.gray.opacity(0.3)
+                                    colorScheme == .light ? Color.black.opacity(0.1) : Color.gray.opacity(0.3)
                                 } else {
                                     LinearGradient(
                                         colors: [.yellow, Color.orange.opacity(0.9)],
@@ -165,7 +185,7 @@ struct QuizRushView: View {
                     dismiss()
                 }
                 .font(.subheadline.bold())
-                .foregroundColor(.gray)
+                .foregroundColor(.secondary)
             }
             .padding(.bottom, 20)
         }
@@ -182,7 +202,7 @@ struct QuizRushView: View {
                         .scaleEffect(1.5)
                     Text("Loading Questions...")
                         .font(.system(.subheadline, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.secondary)
                 }
             case .loaded:
                 if viewModel.isQuizFinished {
@@ -223,7 +243,7 @@ struct QuizRushView: View {
             HStack {
                 Text("Score: \(viewModel.score)")
                     .font(.headline.bold())
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 Spacer()
             }
             .padding(.horizontal)
@@ -231,7 +251,7 @@ struct QuizRushView: View {
             // Circular Countdown Timer
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.06), lineWidth: 5)
+                    .stroke(colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.06), lineWidth: 5)
                     .frame(width: 50, height: 50)
                 
                 Circle()
@@ -246,23 +266,23 @@ struct QuizRushView: View {
                 
                 Text(String(format: "%.0f", ceil(viewModel.questionTimeRemaining)))
                     .font(.body.bold())
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             
             // Glass Question panel
             Text(currentQuestion.question.htmlDecoded)
                 .font(.title3.bold())
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.white.opacity(0.03))
+                .background(cardBackgroundColor)
                 .cornerRadius(20)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                        .strokeBorder(cardBorderColor, lineWidth: 1)
                 )
                 .padding(.horizontal)
             
@@ -283,7 +303,7 @@ struct QuizRushView: View {
                             .padding(.horizontal, 16)
                             .frame(maxWidth: .infinity)
                             .background(buttonColor(for: answer))
-                            .foregroundColor(.white)
+                            .foregroundColor(viewModel.selectedAnswer == nil ? .primary : .white)
                             .cornerRadius(14)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
@@ -302,7 +322,7 @@ struct QuizRushView: View {
                 dismiss()
             }
             .font(.subheadline.bold())
-            .foregroundColor(.gray)
+            .foregroundColor(.secondary)
             .padding(.bottom, 8)
         }
     }
@@ -310,7 +330,7 @@ struct QuizRushView: View {
     // Celebratory Results Screen
     private var resultsView: some View {
         ResultView(
-            gameModeName: "Quiz Rush",
+            gameMode: .quizRush,
             score: viewModel.score,
             highScore: viewModel.highScore,
             newHighScore: viewModel.score > viewModel.highScore && viewModel.score > 0,
@@ -334,10 +354,10 @@ struct QuizRushView: View {
                 .foregroundColor(.red)
             Text("Network Failure")
                 .font(.title.bold())
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
             Text(message)
                 .font(.body)
-                .foregroundColor(.gray)
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
             
@@ -372,9 +392,9 @@ struct QuizRushView: View {
             if answer == selected {
                 return .red
             }
-            return Color.white.opacity(0.01)
+            return colorScheme == .light ? Color.black.opacity(0.01) : Color.white.opacity(0.01)
         }
-        return Color.white.opacity(0.04)
+        return colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.04)
     }
     
     private func buttonBorderColor(for answer: String) -> Color {
@@ -385,9 +405,9 @@ struct QuizRushView: View {
             if answer == selected {
                 return .red
             }
-            return Color.white.opacity(0.03)
+            return colorScheme == .light ? Color.black.opacity(0.03) : Color.white.opacity(0.03)
         }
-        return Color.white.opacity(0.08)
+        return colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.08)
     }
 }
 

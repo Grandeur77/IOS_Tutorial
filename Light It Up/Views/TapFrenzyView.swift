@@ -21,6 +21,24 @@ struct TapFrenzySubMode: Identifiable {
 struct TapFrenzyView: View {
     @State private var selectedMode: TapFrenzyMode? = nil
     @State private var localSelection: TapFrenzySubMode? = nil
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.08)
+    }
+    
+    private var headerTextColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
 
     var body: some View {
         Group {
@@ -37,7 +55,7 @@ struct TapFrenzyView: View {
 
     var modePicker: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            baseBackgroundColor.ignoresSafeArea()
             
             VStack(spacing: 32) {
                 Spacer()
@@ -51,13 +69,13 @@ struct TapFrenzyView: View {
                     
                     Text("TAP FRENZY")
                         .font(.system(size: 30, weight: .black, design: .monospaced))
-                        .foregroundColor(.yellow)
+                        .foregroundColor(headerTextColor)
                         .tracking(5)
-                        .shadow(color: Color.yellow.opacity(0.4), radius: 8)
+                        .shadow(color: headerTextColor.opacity(colorScheme == .light ? 0.2 : 0.4), radius: 8)
                     
                     Text("Select a sub-mode to challenge")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                 }
                 
                 // Selection Grid
@@ -71,27 +89,27 @@ struct TapFrenzyView: View {
                             VStack(spacing: 12) {
                                 Image(systemName: sub.icon)
                                     .font(.title2)
-                                    .foregroundColor(localSelection?.id == sub.id ? .yellow : .white.opacity(0.6))
+                                    .foregroundColor(localSelection?.id == sub.id ? .yellow : (colorScheme == .light ? Color.black.opacity(0.4) : .white.opacity(0.6)))
                                 
                                 Text(sub.mode.rawValue)
                                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.primary)
                                 
                                 Text(sub.description)
                                     .font(.system(size: 10))
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)
                             }
                             .padding(.vertical, 16)
                             .padding(.horizontal, 10)
                             .frame(maxWidth: .infinity, minHeight: 110)
-                            .background(Color.white.opacity(localSelection?.id == sub.id ? 0.06 : 0.03))
+                            .background(localSelection?.id == sub.id ? (colorScheme == .light ? Color.yellow.opacity(0.12) : Color.white.opacity(0.06)) : cardBackgroundColor)
                             .cornerRadius(18)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 18)
                                     .strokeBorder(
-                                        localSelection?.id == sub.id ? Color.yellow : Color.white.opacity(0.08),
+                                        localSelection?.id == sub.id ? Color.yellow : cardBorderColor,
                                         lineWidth: localSelection?.id == sub.id ? 2 : 1
                                     )
                                     .shadow(color: localSelection?.id == sub.id ? .yellow.opacity(0.3) : .clear, radius: 4)
@@ -120,7 +138,7 @@ struct TapFrenzyView: View {
                             .background(
                                 Group {
                                     if localSelection == nil {
-                                        Color.gray.opacity(0.3)
+                                        colorScheme == .light ? Color.black.opacity(0.1) : Color.gray.opacity(0.3)
                                     } else {
                                         LinearGradient(
                                             colors: [.yellow, Color.orange.opacity(0.9)],
@@ -141,7 +159,7 @@ struct TapFrenzyView: View {
                         localSelection = nil
                     }
                     .font(.subheadline.bold())
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
                 }
                 .padding(.bottom, 20)
             }
@@ -175,6 +193,27 @@ struct TapFrenzyGameView: View {
     @State private var burstUsed: Bool = false
     @State private var burstTimer: Timer? = nil
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var highlightColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
+    private var mappedGameMode: GameMode {
+        switch mode {
+        case .combo: return .tapFrenzyCombo
+        case .trapColour: return .tapFrenzyTrap
+        case .moving: return .tapFrenzyMoving
+        case .shrinking: return .tapFrenzyShrinking
+        case .burst: return .tapFrenzyBurst
+        default: return .tapFrenzyDefault
+        }
+    }
+    
     init(mode: TapFrenzyMode, onExit: @escaping () -> Void) {
         self.mode = mode
         self.onExit = onExit
@@ -184,11 +223,11 @@ struct TapFrenzyGameView: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            baseBackgroundColor.ignoresSafeArea()
             
             if isGameOver {
                 ResultView(
-                    gameModeName: "Tap Frenzy (\(mode.rawValue))",
+                    gameMode: mappedGameMode,
                     score: score,
                     highScore: highScore,
                     newHighScore: newHighScore,
@@ -205,12 +244,12 @@ struct TapFrenzyGameView: View {
                     HStack(spacing: 12) {
                         Text("SCORE: \(score)")
                             .font(.system(.title2, design: .monospaced).bold())
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                         
                         if mode == .combo, multiplier > 1 {
                             Text("×\(multiplier)")
                                 .font(.title.bold())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(highlightColor)
                                 .transition(.scale)
                                 .animation(.spring(), value: multiplier)
                         }
@@ -219,14 +258,14 @@ struct TapFrenzyGameView: View {
                         
                         Text(String(format: "%.1f", timeLeft))
                             .font(.system(.title3, design: .monospaced).bold())
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                             .padding(.vertical, 8)
                             .padding(.horizontal, 14)
-                            .background(Color.white.opacity(0.04))
+                            .background(colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.04))
                             .cornerRadius(12)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                                    .strokeBorder(colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.08), lineWidth: 1)
                             )
                     }
                     .padding([.top, .horizontal])
@@ -268,7 +307,7 @@ struct TapFrenzyGameView: View {
                         onExit()
                     }
                     .font(.subheadline.bold())
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
                     .padding(.bottom, 8)
                 }
             }

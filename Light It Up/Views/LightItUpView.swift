@@ -13,15 +13,25 @@ struct LightItUpView: View {
     @State private var showMissed: Bool = false
     @AppStorage("LightItUpHighScore") private var highScore: Int = 0
     @State private var newHighScore: Bool = false
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var countdownColor: Color {
+        colorScheme == .light ? .orange : .yellow
+    }
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            baseBackgroundColor.ignoresSafeArea()
             
             // show the shared ResultView
             if isGameOver {
                 ResultView(
-                    gameModeName: "Light It Up",
+                    gameMode: .lightItUp,
                     score: score,
                     highScore: highScore,
                     newHighScore: newHighScore,
@@ -37,7 +47,7 @@ struct LightItUpView: View {
                 VStack(spacing: 24) {
                     Text("Light It Up")
                         .font(.largeTitle.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
@@ -46,12 +56,12 @@ struct LightItUpView: View {
                                 .foregroundColor(.accentColor)
                             Text(String(format: "Round Time: %.1fs", gameTimeRemaining))
                                 .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(.secondary)
                         }
                         Spacer()
                         Text("Score: \(score)")
                             .font(.title2.bold())
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                     }
                     .padding(.horizontal)
 
@@ -71,7 +81,7 @@ struct LightItUpView: View {
                     VStack(spacing: 8) {
                         Text(String(format: "Lit Time Left: %.1fs", max(0, litTimeRemaining)))
                             .font(.caption.monospacedDigit())
-                            .foregroundColor(.yellow)
+                            .foregroundColor(countdownColor)
                         
                         ProgressView(value: max(0, litTimeRemaining), total: currentLevel.litWindow)
                             .progressViewStyle(LinearProgressViewStyle())
@@ -181,14 +191,16 @@ struct CardView: View {
     let isLit: Bool
     let showMissed: Bool
     
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
-            .fill(showMissed ? Color.red : (isLit ? Color.accentColor : Color.gray.opacity(0.5)))
+            .fill(showMissed ? Color.red : (isLit ? Color.accentColor : (colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.15))))
             .frame(minWidth: 60, minHeight: 80)
             .shadow(color: isLit ? Color.accentColor.opacity(0.5) : .clear, radius: 14)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1)
+                    .strokeBorder(colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.15), lineWidth: 1)
             )
     }
 }

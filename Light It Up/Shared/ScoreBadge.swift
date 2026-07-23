@@ -5,11 +5,21 @@ struct ScoreBadge: View {
     let score: Int
     let color: Color
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var badgeBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var badgeBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
+    
     var body: some View {
         VStack(spacing: 8) {
             Text(title)
                 .font(.caption.bold().monospaced())
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.secondary)
                 .tracking(1)
             
             Text("\(score)")
@@ -19,13 +29,13 @@ struct ScoreBadge: View {
         .frame(minWidth: 120)
         .padding(.vertical, 16)
         .padding(.horizontal, 16)
-        .background(Color.white.opacity(0.03)) // Glass backdrop
+        .background(badgeBackgroundColor) // Glass backdrop
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [color.opacity(0.4), Color.white.opacity(0.05)],
+                        colors: [color.opacity(0.4), badgeBorderColor],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),

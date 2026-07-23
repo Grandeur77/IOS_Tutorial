@@ -112,7 +112,7 @@ struct LoginView: View {
                                 .focusedFieldBind(.username, binding: $focusedField)
                             }
                             .padding()
-                            .background(colorScheme == .light ? Color.white.opacity(0.05) : Color.white.opacity(0.01))
+                            .background(colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.01))
                             .cornerRadius(14)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
@@ -141,7 +141,7 @@ struct LoginView: View {
                                 .focusedFieldBind(.password, binding: $focusedField)
                             }
                             .padding()
-                            .background(colorScheme == .light ? Color.white.opacity(0.05) : Color.white.opacity(0.01))
+                            .background(colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.01))
                             .cornerRadius(14)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)

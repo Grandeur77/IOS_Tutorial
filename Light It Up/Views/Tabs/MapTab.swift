@@ -4,6 +4,12 @@ import MapKit
 struct MapTab: View {
     @State private var sessions: [GameSession] = []
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
     // Filters raw history to map only sessions
     var mappedSessions: [GameSession] {
         sessions.filter { $0.latitude != nil && $0.longitude != nil }
@@ -12,7 +18,7 @@ struct MapTab: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                baseBackgroundColor.ignoresSafeArea()
                 
                 if mappedSessions.isEmpty {
                     // instructions to get pins mapped
@@ -23,11 +29,11 @@ struct MapTab: View {
                         
                         Text("No Game Locations Yet")
                             .font(.title2.bold())
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                         
                         Text("Enable location permissions and complete games to see pins on the map!")
                             .font(.caption)
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }

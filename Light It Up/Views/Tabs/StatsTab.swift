@@ -15,6 +15,24 @@ struct StatsTab: View {
     @State private var selectedChartMode: GameModeCategory = .tapFrenzy
     @State private var selectedLeaderboardMode: GameModeCategory = .tapFrenzy
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
+    
+    private var headerTextColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
     func colorForGameName(_ name: String) -> Color {
         switch name {
         case "Light It Up": return .accentColor
@@ -40,7 +58,7 @@ struct StatsTab: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                baseBackgroundColor.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 28) {
@@ -67,9 +85,9 @@ struct StatsTab: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("SCORE TREND (LAST 10 GAMES)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal)
-                   
+                            
                             HStack(spacing: 8) {
                                 ForEach(GameModeCategory.allCases) { category in
                                     Button(action: {
@@ -77,10 +95,10 @@ struct StatsTab: View {
                                     }) {
                                         Text(category.rawValue)
                                             .font(.caption.bold())
-                                            .foregroundColor(selectedChartMode == category ? .black : .white)
+                                            .foregroundColor(selectedChartMode == category ? (colorScheme == .light ? .white : .black) : (colorScheme == .light ? .primary : .white))
                                             .padding(.vertical, 8)
                                             .frame(maxWidth: .infinity)
-                                            .background(selectedChartMode == category ? Color.accentColor : Color.white.opacity(0.06))
+                                            .background(selectedChartMode == category ? Color.accentColor : (colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.06)))
                                             .cornerRadius(8)
                                     }
                                 }
@@ -91,12 +109,16 @@ struct StatsTab: View {
                                 VStack {
                                     Text("No sessions played yet in this mode")
                                         .font(.caption)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.secondary)
                                 }
                                 .frame(height: 180)
                                 .frame(maxWidth: .infinity)
-                                .background(Color.white.opacity(0.03))
+                                .background(cardBackgroundColor)
                                 .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(cardBorderColor, lineWidth: 1)
+                                )
                                 .padding(.horizontal)
                             } else {
                                 Chart {
@@ -112,24 +134,24 @@ struct StatsTab: View {
                                 .chartXAxis {
                                     AxisMarks(values: .automatic) { _ in
                                         AxisValueLabel()
-                                            .foregroundStyle(Color.white.opacity(0.8))
+                                            .foregroundStyle(Color.primary.opacity(0.8))
                                     }
                                 }
                                 .chartYAxis {
                                     AxisMarks(values: .automatic) { _ in
                                         AxisGridLine()
-                                            .foregroundStyle(Color.white.opacity(0.1))
+                                            .foregroundStyle(colorScheme == .light ? Color.black.opacity(0.1) : Color.white.opacity(0.1))
                                         AxisValueLabel()
-                                            .foregroundStyle(Color.white.opacity(0.8))
+                                            .foregroundStyle(Color.primary.opacity(0.8))
                                     }
                                 }
                                 .frame(height: 180)
                                 .padding()
-                                .background(Color.white.opacity(0.03))
+                                .background(cardBackgroundColor)
                                 .cornerRadius(14)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 14)
-                                        .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                        .strokeBorder(cardBorderColor, lineWidth: 1)
                                 )
                                 .padding(.horizontal)
                             }
@@ -139,19 +161,23 @@ struct StatsTab: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("GAME PLAY POPULARITY (DISTRIBUTION)")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal)
                             
                             if viewModel.gameDistribution.isEmpty {
                                 VStack {
                                     Text("Play a game to see distribution stats")
                                         .font(.caption)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.secondary)
                                 }
                                 .frame(height: 180)
                                 .frame(maxWidth: .infinity)
-                                .background(Color.white.opacity(0.03))
+                                .background(cardBackgroundColor)
                                 .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(cardBorderColor, lineWidth: 1)
+                                )
                                 .padding(.horizontal)
                             } else {
                                 VStack(spacing: 12) {
@@ -176,14 +202,14 @@ struct StatsTab: View {
                                                 
                                                 Text(item.name)
                                                     .font(.caption.bold())
-                                                    .foregroundColor(.white)
+                                                    .foregroundColor(.primary)
                                                 
                                                 Spacer()
                                                 
                                                 let percent = Double(item.count) / Double(viewModel.totalGamesPlayed) * 100
                                                 Text(String(format: "%.0f%% (%d games)", percent, item.count))
                                                     .font(.caption.monospacedDigit())
-                                                    .foregroundColor(.yellow)
+                                                    .foregroundColor(headerTextColor)
                                             }
                                             .padding(.horizontal, 8)
                                         }
@@ -191,21 +217,21 @@ struct StatsTab: View {
                                     .padding(.top, 4)
                                 }
                                 .padding()
-                                .background(Color.white.opacity(0.03))
+                                .background(cardBackgroundColor)
                                 .cornerRadius(14)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 14)
-                                        .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                        .strokeBorder(cardBorderColor, lineWidth: 1)
                                 )
                                 .padding(.horizontal)
                             }
                         }
                         
-                        // Leaderboard stand standings
+                        // Leaderboard standings
                         VStack(alignment: .leading, spacing: 16) {
                             Text("LEADERBOARD STANDINGS")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal)
                             
                             HStack(spacing: 8) {
@@ -217,10 +243,10 @@ struct StatsTab: View {
                                     }) {
                                         Text(category.rawValue)
                                             .font(.caption.bold())
-                                            .foregroundColor(selectedLeaderboardMode == category ? .black : .white)
+                                            .foregroundColor(selectedLeaderboardMode == category ? (colorScheme == .light ? .white : .black) : (colorScheme == .light ? .primary : .white))
                                             .padding(.vertical, 8)
                                             .frame(maxWidth: .infinity)
-                                            .background(selectedLeaderboardMode == category ? Color.accentColor : Color.white.opacity(0.06))
+                                            .background(selectedLeaderboardMode == category ? Color.accentColor : (colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.06)))
                                             .cornerRadius(8)
                                     }
                                 }
@@ -233,12 +259,16 @@ struct StatsTab: View {
                                 VStack {
                                     Text("No leaderboard records yet")
                                         .font(.caption)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.secondary)
                                 }
                                 .frame(height: 150)
                                 .frame(maxWidth: .infinity)
-                                .background(Color.white.opacity(0.03))
+                                .background(cardBackgroundColor)
                                 .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(cardBorderColor, lineWidth: 1)
+                                )
                                 .padding(.horizontal)
                             } else {
                                 VStack(spacing: 10) {
@@ -254,7 +284,7 @@ struct StatsTab: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("PERSONAL BESTS")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal)
                             
                             VStack(spacing: 12) {
@@ -307,6 +337,29 @@ struct LeaderboardRow: View {
     let rank: Int
     let entry: LeaderboardEntry
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var rowBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var rowBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
+    
+    private var highlightColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
+    private var rankColor: Color {
+        switch rank {
+        case 1: return colorScheme == .light ? .orange : .yellow
+        case 2: return .gray.opacity(0.8)
+        case 3: return .orange.opacity(0.8)
+        default: return colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.05)
+        }
+    }
+    
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
@@ -316,52 +369,43 @@ struct LeaderboardRow: View {
                         .foregroundColor(rankColor)
                 } else {
                     Circle()
-                        .fill(Color.white.opacity(0.08))
+                        .fill(colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.08))
                         .frame(width: 28, height: 28)
                     Text("\(rank)")
                         .font(.caption.bold())
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                 }
             }
             .frame(width: 32, height: 32)
             
             Text(entry.username)
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
             
             Spacer()
             
             Text("\(entry.score) pts")
                 .font(.system(.body, design: .monospaced).bold())
-                .foregroundColor(rank <= 3 ? .yellow : .white.opacity(0.8))
+                .foregroundColor(rank <= 3 ? highlightColor : (colorScheme == .light ? .primary.opacity(0.8) : .white.opacity(0.8)))
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
-                .background(rank <= 3 ? Color.yellow.opacity(0.08) : Color.white.opacity(0.04))
+                .background(rank <= 3 ? highlightColor.opacity(0.08) : (colorScheme == .light ? Color.black.opacity(0.04) : Color.white.opacity(0.04)))
                 .cornerRadius(8)
         }
         .padding()
-        .background(Color.white.opacity(0.03))
+        .background(rowBackgroundColor)
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [rankColor.opacity(0.4), Color.white.opacity(0.05)],
+                        colors: [rankColor.opacity(0.4), rowBorderColor],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     lineWidth: 1
                 )
         )
-    }
-    
-    private var rankColor: Color {
-        switch rank {
-        case 1: return .yellow
-        case 2: return .gray.opacity(0.8)
-        case 3: return .orange.opacity(0.8)
-        default: return Color.white.opacity(0.05)
-        }
     }
 }
 
@@ -371,6 +415,16 @@ struct StatSummaryCard: View {
     let value: String
     let icon: String
     let color: Color
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -383,21 +437,21 @@ struct StatSummaryCard: View {
             
             Text(value)
                 .font(.system(size: 32, weight: .black, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
             
             Text(title)
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.white.opacity(0.03))
+        .background(cardBackgroundColor)
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [color.opacity(0.4), Color.white.opacity(0.05)],
+                        colors: [color.opacity(0.4), cardBorderColor],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
@@ -414,6 +468,20 @@ struct PersonalBestRow: View {
     let icon: String
     let color: Color
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var rowBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var rowBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
+    
+    private var highlightColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
@@ -425,31 +493,31 @@ struct PersonalBestRow: View {
             
             Text(title)
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
             
             Spacer()
             
             HStack(spacing: 4) {
                 Image(systemName: "crown.fill")
                     .font(.caption2)
-                    .foregroundColor(.yellow)
+                    .foregroundColor(highlightColor)
                 Text("\(score)")
                     .font(.system(.body, design: .monospaced).bold())
-                    .foregroundColor(.yellow)
+                    .foregroundColor(highlightColor)
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 10)
-            .background(Color.yellow.opacity(0.08))
+            .background(highlightColor.opacity(0.08))
             .cornerRadius(8)
         }
         .padding()
-        .background(Color.white.opacity(0.03)) 
+        .background(rowBackgroundColor)
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [color.opacity(0.3), Color.white.opacity(0.05)],
+                        colors: [color.opacity(0.3), rowBorderColor],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),

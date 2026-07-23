@@ -6,6 +6,12 @@ struct SettingsTab: View {
     
     @AppStorage("IsUserLoggedIn") private var isUserLoggedIn = false
     
+    // Read and write the global theme setting (Defaults to Dark)
+    @AppStorage("AppTheme") private var appTheme: AppTheme = .dark
+    
+    // Access active iOS ColorScheme (light or dark)
+    @Environment(\.colorScheme) var colorScheme
+    
     // Player Profile States
     @AppStorage("PlayerDisplayName") private var displayName = "Guest"
     @State private var tempName = ""
@@ -29,19 +35,88 @@ struct SettingsTab: View {
     @State private var showErrorAlert = false
     @State private var alertMessage = ""
     
+    // Colors helper for adaptive design
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
+    
+    private var headerTextColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
+    private var dividerColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.08)
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                baseBackgroundColor.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 28) {
                         
-                        // Player Profile Card
+                        // SECTION 1: Theme Settings Card (Phase 13 Selector)
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("THEME SETTINGS")
+                                .font(.system(size: 11, weight: .bold).monospaced())
+                                .foregroundColor(headerTextColor)
+                                .padding(.horizontal, 4)
+                            
+                            VStack(spacing: 16) {
+                                HStack(spacing: 8) {
+                                    ForEach(AppTheme.allCases) { option in
+                                        let isSelected = appTheme == option
+                                        let fgColor = isSelected ? (colorScheme == .light ? Color.white : Color.black) : Color.primary
+                                        let bgColor = isSelected ? Color.accentColor : Color.white.opacity(colorScheme == .light ? 0.05 : 0.03)
+                                        let strokeColor = isSelected ? Color.accentColor : cardBorderColor
+                                        
+                                        Button(action: {
+                                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                                appTheme = option
+                                            }
+                                        }) {
+                                            VStack(spacing: 6) {
+                                                Image(systemName: iconForTheme(option))
+                                                    .font(.subheadline)
+                                                Text(option.rawValue)
+                                                    .font(.caption.bold())
+                                            }
+                                            .foregroundColor(fgColor)
+                                            .padding(.vertical, 10)
+                                            .frame(maxWidth: .infinity)
+                                            .background(bgColor)
+                                            .cornerRadius(10)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .strokeBorder(strokeColor, lineWidth: 1)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(20)
+                            .background(cardBackgroundColor)
+                            .cornerRadius(20)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .strokeBorder(cardBorderColor, lineWidth: 1)
+                            )
+                        }
+                        
+                        // SECTION 2: Player Profile Card
                         VStack(alignment: .leading, spacing: 14) {
                             Text("PLAYER PROFILE")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal, 4)
                             
                             VStack(spacing: 16) {
@@ -56,25 +131,25 @@ struct SettingsTab: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(displayName)
                                             .font(.headline)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.primary)
                                         Text(isUserLoggedIn ? "Registered Account" : "Guest Account")
                                             .font(.caption)
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(.secondary)
                                     }
                                     Spacer()
                                 }
                                 .padding(.bottom, 4)
                                 
-                                Divider().background(Color.white.opacity(0.08))
+                                Divider().background(dividerColor)
                                 
                                 // Input Field
                                 TextField(
                                     "",
                                     text: $tempName,
-                                    prompt: Text("Display Name").foregroundColor(.white.opacity(0.35))
+                                    prompt: Text("Display Name").foregroundColor(.secondary.opacity(0.5))
                                 )
                                 .font(.body)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .submitLabel(.done)
                                 .padding(.vertical, 8)
                                 
@@ -114,19 +189,19 @@ struct SettingsTab: View {
                                 }
                             }
                             .padding(20)
-                            .background(Color.white.opacity(0.03))
+                            .background(cardBackgroundColor)
                             .cornerRadius(20)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                    .strokeBorder(cardBorderColor, lineWidth: 1)
                             )
                         }
                         
-                        // Gameplay Settings
+                        // SECTION 3: Gameplay Settings
                         VStack(alignment: .leading, spacing: 14) {
                             Text("GAMEPLAY")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal, 4)
                             
                             VStack(spacing: 16) {
@@ -139,37 +214,37 @@ struct SettingsTab: View {
                                 .tint(.accentColor)
                             }
                             .padding(20)
-                            .background(Color.white.opacity(0.03))
+                            .background(cardBackgroundColor)
                             .cornerRadius(20)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                    .strokeBorder(cardBorderColor, lineWidth: 1)
                             )
                         }
                         
-                        // Sound & Haptics Card
+                        // SECTION 4: Sound & Haptics Card
                         VStack(alignment: .leading, spacing: 14) {
                             Text("SOUND & HAPTICS")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal, 4)
                             
                             VStack(spacing: 20) {
                                 Toggle(isOn: $isSoundEnabled) {
                                     Label("Game Sounds", systemImage: "speaker.wave.3.fill")
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.primary)
                                 }
                                 .tint(.accentColor)
                                 
-                                Divider().background(Color.white.opacity(0.08))
+                                Divider().background(dividerColor)
                                 
                                 Toggle(isOn: $isHapticsEnabled) {
                                     Label("Haptic Feedback", systemImage: "iphone.radiowaves.left.and.right")
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.primary)
                                 }
                                 .tint(.accentColor)
                                 
-                                Divider().background(Color.white.opacity(0.08))
+                                Divider().background(dividerColor)
                                 
                                 Button(action: triggerTestAlert) {
                                     Label("Test Sound & Haptics", systemImage: "waveform")
@@ -178,25 +253,25 @@ struct SettingsTab: View {
                                 }
                             }
                             .padding(20)
-                            .background(Color.white.opacity(0.03))
+                            .background(cardBackgroundColor)
                             .cornerRadius(20)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                    .strokeBorder(cardBorderColor, lineWidth: 1)
                             )
                         }
                         
-                        // Daily Reminders Card
+                        // SECTION 5: Daily Reminders Card
                         VStack(alignment: .leading, spacing: 14) {
                             Text("DAILY REMINDERS")
                                 .font(.system(size: 11, weight: .bold).monospaced())
-                                .foregroundColor(.yellow)
+                                .foregroundColor(headerTextColor)
                                 .padding(.horizontal, 4)
                             
                             VStack(spacing: 20) {
                                 Toggle(isOn: $isReminderEnabled) {
                                     Label("Enable Daily Reminder", systemImage: "bell.fill")
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.primary)
                                 }
                                 .tint(.accentColor)
                                 .onChange(of: isReminderEnabled) { newValue in
@@ -209,7 +284,7 @@ struct SettingsTab: View {
                                 }
                                 
                                 if isReminderEnabled {
-                                    Divider().background(Color.white.opacity(0.08))
+                                    Divider().background(dividerColor)
                                     
                                     DatePicker("Remind Me At", selection: $selectedTime, displayedComponents: .hourAndMinute)
                                         .datePickerStyle(.compact)
@@ -221,17 +296,28 @@ struct SettingsTab: View {
                                             rescheduleNotification()
                                         }
                                 }
+                                
+                                Divider().background(dividerColor)
+                                
+                                Button(action: {
+                                    NotificationService.shared.requestPermission()
+                                    NotificationService.shared.scheduleTestNotification()
+                                }) {
+                                    Label("Send Test Notification (5s Delay)", systemImage: "timer")
+                                        .font(.subheadline.bold())
+                                        .foregroundColor(.accentColor)
+                                }
                             }
                             .padding(20)
-                            .background(Color.white.opacity(0.03))
+                            .background(cardBackgroundColor)
                             .cornerRadius(20)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                                    .strokeBorder(cardBorderColor, lineWidth: 1)
                             )
                         }
                         
-                        // Danger Zone Card
+                        // SECTION 6: Danger Zone Card
                         VStack(alignment: .leading, spacing: 14) {
                             Text("DANGER ZONE")
                                 .font(.system(size: 11, weight: .bold).monospaced())
@@ -255,7 +341,7 @@ struct SettingsTab: View {
                                 }
                             }
                             .padding(20)
-                            .background(Color.white.opacity(0.03))
+                            .background(cardBackgroundColor)
                             .cornerRadius(20)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
@@ -287,6 +373,14 @@ struct SettingsTab: View {
             } message: {
                 Text("This will permanently delete all your high scores, statistics, map coordinates, and game sessions. This action cannot be undone.")
             }
+        }
+    }
+    
+    private func iconForTheme(_ theme: AppTheme) -> String {
+        switch theme {
+        case .dark: return "moon.stars.fill"
+        case .light: return "sun.max.fill"
+        case .system: return "display"
         }
     }
     
@@ -336,8 +430,4 @@ struct SettingsTab: View {
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
-}
-
-#Preview {
-    SettingsTab(isGuestMode: .constant(false))
 }

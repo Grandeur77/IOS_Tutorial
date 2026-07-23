@@ -160,12 +160,15 @@ struct LightItUpView: View {
 
     func endGame() {
         timer?.invalidate()
-        isGameOver = true
+        
+        // Save the completed game session FIRST
+        GameSessionStore.saveSession(mode: .lightItUp, score: score)
+        
         if score > highScore {
             highScore = score
             newHighScore = true
         }
-        GameSessionStore.saveSession(mode: .lightItUp, score: score)
+        isGameOver = true
     }
 
     func restartGame() {

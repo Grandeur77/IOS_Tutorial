@@ -119,13 +119,14 @@ class QuizViewModel: ObservableObject {
             self.currentIndex += 1
             self.startQuestionTimer()
         } else {
-            self.isQuizFinished = true
             if self.score > self.highScore {
                 UserDefaults.standard.set(self.score, forKey: "QuizRushHighScore")
             }
             
-            // Save the completed game session
+            // Save the completed game session FIRST
             GameSessionStore.saveSession(mode: .quizRush, score: self.score)
+            
+            self.isQuizFinished = true
         }
     }
     

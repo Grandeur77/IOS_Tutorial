@@ -3,6 +3,16 @@ import SwiftUI
 struct HomeTab: View {
     @State private var selection: GameType? = nil
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var baseBackgroundColor: Color {
+        colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
+    }
+    
+    private var titleColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
     // Read high scores for all Tap Frenzy sub-modes
     @AppStorage("TapFrenzyHighScore_Default") private var tfDefaultScore: Int = 0
     @AppStorage("TapFrenzyHighScore_Combo System") private var tfComboScore: Int = 0
@@ -23,20 +33,20 @@ struct HomeTab: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                baseBackgroundColor.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-
+                    
                     VStack(spacing: 12) {
                         Text("GAME ARCADIA")
                             .font(.system(size: 32, weight: .black, design: .monospaced))
-                            .foregroundColor(.yellow)
+                            .foregroundColor(titleColor)
                             .tracking(6)
-                            .shadow(color: Color.yellow.opacity(0.5), radius: 10)
+                            .shadow(color: titleColor.opacity(colorScheme == .light ? 0.2 : 0.5), radius: 10)
                         
                         Text("SELECT A CHALLENGE TO BEGIN")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(.gray)
+                            .foregroundColor(colorScheme == .light ? .secondary : .gray)
                             .tracking(2)
                     }
                     .padding(.top, 40)
@@ -97,27 +107,41 @@ struct GameCard: View {
     let highScore: Int
     let action: () -> Void
     
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
+    }
+    
+    private var themeColor: Color {
+        colorScheme == .light ? Color.orange : Color.yellow
+    }
+    
     var body: some View {
         Button(action: action) {
             HStack(spacing: 18) {
-
+                
                 Image(systemName: iconName)
                     .font(.title2)
-                    .foregroundColor(.yellow)
+                    .foregroundColor(themeColor)
                     .frame(width: 50, height: 50)
-                    .background(Color.yellow.opacity(0.1))
+                    .background(themeColor.opacity(0.1))
                     .cornerRadius(12)
-                    .shadow(color: .yellow.opacity(0.2), radius: 4)
+                    .shadow(color: themeColor.opacity(0.2), radius: 4)
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title.uppercased())
                         .font(.system(.headline, design: .monospaced).bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .tracking(1)
                     
                     Text(description)
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                 }
@@ -143,26 +167,22 @@ struct GameCard: View {
                 )
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.white.opacity(0.03), Color.white.opacity(0.01)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            ) // Glass backdrop
+            .background(cardBackgroundColor)
             .cornerRadius(20)
-      
+            
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
                     .strokeBorder(
                         LinearGradient(
-                            colors: [.accentColor.opacity(0.4), .yellow.opacity(0.15)],
+                            colors: colorScheme == .light
+                                ? [Color.black.opacity(0.06), Color.black.opacity(0.04)]
+                                : [.accentColor.opacity(0.4), themeColor.opacity(0.15)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
                         lineWidth: 1.5
                     )
-                    .shadow(color: .accentColor.opacity(0.15), radius: 6)
+                    .shadow(color: colorScheme == .light ? Color.black.opacity(0.03) : Color.accentColor.opacity(0.15), radius: 6)
             )
         }
     }

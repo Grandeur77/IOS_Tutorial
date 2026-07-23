@@ -418,7 +418,6 @@ struct TapFrenzyGameView: View {
     }
     
     func gameOver() {
-        isGameOver = true
         multiplier = 1
         lastTapTime = nil
         stopAllTimers()
@@ -440,7 +439,10 @@ struct TapFrenzyGameView: View {
         default: mappedMode = .tapFrenzyDefault
         }
         
+        // Save the completed game session FIRST
         GameSessionStore.saveSession(mode: mappedMode, score: score)
+        
+        isGameOver = true
     }
     
     func restart() {

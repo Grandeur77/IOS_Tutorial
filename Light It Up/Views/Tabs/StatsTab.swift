@@ -61,7 +61,7 @@ struct StatsTab: View {
             case .tapFrenzy:
                 return session.mode.rawValue.contains("Tap Frenzy")
             case .lightItUp:
-                return session.mode == .lightItUp
+                return session.mode == .lightItUp || session.mode.rawValue.contains("Light It Up")
             case .quizRush:
                 return session.mode == .quizRush
             }

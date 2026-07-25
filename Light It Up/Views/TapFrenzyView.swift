@@ -161,7 +161,7 @@ struct TapFrenzyView: View {
                     .font(.subheadline.bold())
                     .foregroundColor(.secondary)
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, 75)
             }
         }
     }

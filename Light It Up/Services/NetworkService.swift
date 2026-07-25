@@ -1,13 +1,16 @@
 import Foundation
 
 class NetworkService {
-    // An optional category ID filter
-    func fetchQuestions(categoryID: Int? = nil) async throws -> [Question] {
+    // Fetch trivia questions filterable by category and difficulty
+    func fetchQuestions(categoryID: Int? = nil, difficulty: String? = nil) async throws -> [Question] {
         var urlString = "https://opentdb.com/api.php?amount=10&type=multiple"
         
-        // User selected category 
         if let categoryID = categoryID {
             urlString += "&category=\(categoryID)"
+        }
+        
+        if let difficulty = difficulty {
+            urlString += "&difficulty=\(difficulty)"
         }
         
         guard let url = URL(string: urlString) else {

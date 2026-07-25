@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Local Genre Model
 struct QuizGenre: Identifiable {
     let id: Int
     let name: String
@@ -16,6 +17,47 @@ struct QuizGenre: Identifiable {
     ]
 }
 
+// Local Difficulty Model
+enum QuizDifficulty: String, CaseIterable, Identifiable {
+    case easy = "Easy"
+    case intermediate = "Intermediate"
+    case hard = "Hard"
+    
+    var id: String { self.rawValue }
+    
+    var apiValue: String {
+        switch self {
+        case .easy: return "easy"
+        case .intermediate: return "medium"
+        case .hard: return "hard"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .easy: return "star.fill"
+        case .intermediate: return "star.leadinghalf.filled"
+        case .hard: return "star"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .easy: return .green
+        case .intermediate: return .orange
+        case .hard: return .red
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .easy: return "Straightforward questions to warm up."
+        case .intermediate: return "A balanced mix of knowledge tests."
+        case .hard: return "Tough brain teasers for experts."
+        }
+    }
+}
+
 // Quiz Rush View
 struct QuizRushView: View {
     @StateObject private var viewModel = QuizViewModel()
@@ -23,6 +65,7 @@ struct QuizRushView: View {
     
     // View States
     @State private var selectedGenre: QuizGenre? = nil
+    @State private var selectedDifficulty: QuizDifficulty? = nil
     @State private var isGameStarted = false
     @State private var shakeOffset: CGFloat = 0
     @State private var animateBlob = false
@@ -73,7 +116,7 @@ struct QuizRushView: View {
             
             // Router logic
             if !isGameStarted {
-                genreSelectionView
+                setupSelectionView
             } else {
                 activeQuizView
             }
@@ -83,111 +126,157 @@ struct QuizRushView: View {
         }
     }
     
-    // Genre Selection View
-    private var genreSelectionView: some View {
-        VStack(spacing: 32) {
-            Spacer()
-                .frame(height: 10)
-            
-            // Header
-            VStack(spacing: 12) {
-                Image(systemName: "questionmark.circle.fill")
-                    .font(.system(size: 54))
-                    .foregroundColor(.accentColor)
-                    .shadow(color: .accentColor.opacity(0.4), radius: 8)
+    // Combined Genre and Difficulty Selection View
+    private var setupSelectionView: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 28) {
+                Spacer()
+                    .frame(height: 10)
                 
-                Text("CHOOSE TOPIC")
-                    .font(.system(size: 28, weight: .black, design: .monospaced))
-                    .foregroundColor(headerTextColor)
-                    .tracking(4)
-                    .shadow(color: headerTextColor.opacity(colorScheme == .light ? 0.2 : 0.4), radius: 6)
+                // Header
+                VStack(spacing: 12) {
+                    Image(systemName: "questionmark.circle.fill")
+                        .font(.system(size: 54))
+                        .foregroundColor(.accentColor)
+                        .shadow(color: .accentColor.opacity(0.4), radius: 8)
+                    
+                    Text("QUIZ RUSH")
+                        .font(.system(size: 26, weight: .black, design: .monospaced))
+                        .foregroundColor(headerTextColor)
+                        .tracking(4)
+                        .shadow(color: headerTextColor.opacity(colorScheme == .light ? 0.2 : 0.4), radius: 6)
+                    
+                    Text("Select your topic and difficulty level")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 
-                Text("Select a genre to test your skills")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            // Genres
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 16) {
-                ForEach(QuizGenre.allGenres) { genre in
+                // Topic Selector Grid
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("1. SELECT TOPIC")
+                        .font(.system(size: 11, weight: .bold).monospaced())
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 20)
+                    
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                        ForEach(QuizGenre.allGenres) { genre in
+                            Button(action: {
+                                selectedGenre = genre
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: genre.icon)
+                                        .font(.system(size: 20))
+                                        .foregroundColor(selectedGenre?.id == genre.id ? genre.color : (colorScheme == .light ? Color.black.opacity(0.4) : .white.opacity(0.6)))
+                                    
+                                    Text(genre.name)
+                                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                        .multilineTextAlignment(.center)
+                                        .lineLimit(2)
+                                        .minimumScaleFactor(0.8)
+                                }
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 8)
+                                .frame(maxWidth: .infinity, minHeight: 85)
+                                .background(selectedGenre?.id == genre.id ? (colorScheme == .light ? Color.accentColor.opacity(0.1) : Color.white.opacity(0.06)) : cardBackgroundColor)
+                                .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(
+                                            selectedGenre?.id == genre.id ? genre.color : cardBorderColor,
+                                            lineWidth: selectedGenre?.id == genre.id ? 2 : 1
+                                        )
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                
+                // Difficulty Selector HStack
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("2. SELECT DIFFICULTY")
+                        .font(.system(size: 11, weight: .bold).monospaced())
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 20)
+                    
+                    HStack(spacing: 12) {
+                        ForEach(QuizDifficulty.allCases) { diff in
+                            Button(action: {
+                                selectedDifficulty = diff
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: diff.icon)
+                                        .font(.caption)
+                                        .foregroundColor(selectedDifficulty == diff ? diff.color : (colorScheme == .light ? Color.black.opacity(0.4) : .white.opacity(0.6)))
+                                    
+                                    Text(diff.rawValue)
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 48)
+                                .background(selectedDifficulty == diff ? (colorScheme == .light ? Color.accentColor.opacity(0.1) : Color.white.opacity(0.06)) : cardBackgroundColor)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(
+                                            selectedDifficulty == diff ? diff.color : cardBorderColor,
+                                            lineWidth: selectedDifficulty == diff ? 2 : 1
+                                        )
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                
+                Spacer()
+                    .frame(height: 10)
+                
+                // Action Start buttons
+                VStack(spacing: 16) {
                     Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedGenre = genre
+                        if let genre = selectedGenre, let diff = selectedDifficulty {
+                            withAnimation {
+                                isGameStarted = true
+                            }
+                            Task {
+                                await viewModel.loadQuestions(categoryID: genre.id, difficulty: diff.apiValue)
+                            }
                         }
                     }) {
-                        VStack(spacing: 16) {
-                            Image(systemName: genre.icon)
-                                .font(.title)
-                                .foregroundColor(selectedGenre?.id == genre.id ? genre.color : (colorScheme == .light ? Color.black.opacity(0.4) : .white.opacity(0.6)))
-                            
-                            Text(genre.name)
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.vertical, 20)
-                        .padding(.horizontal, 10)
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                        .background(selectedGenre?.id == genre.id ? (colorScheme == .light ? Color.accentColor.opacity(0.1) : Color.white.opacity(0.06)) : cardBackgroundColor)
-                        .cornerRadius(20)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .strokeBorder(
-                                    selectedGenre?.id == genre.id ? genre.color : cardBorderColor,
-                                    lineWidth: selectedGenre?.id == genre.id ? 2 : 1
-                                )
-                                .shadow(color: selectedGenre?.id == genre.id ? genre.color.opacity(0.3) : .clear, radius: 4)
-                        )
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-            
-            Spacer()
-            
-            // Action Start button
-            VStack(spacing: 16) {
-                Button(action: {
-                    if let genre = selectedGenre {
-                        withAnimation {
-                            isGameStarted = true
-                        }
-                        Task {
-                            await viewModel.loadQuestions(categoryID: genre.id)
-                        }
-                    }
-                }) {
-                    Text("PLAY")
-                        .font(.system(.headline, design: .monospaced).bold())
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            Group { // <-- Wrapped in Group to compile-safely return different view types
-                                if selectedGenre == nil {
-                                    colorScheme == .light ? Color.black.opacity(0.1) : Color.gray.opacity(0.3)
-                                } else {
-                                    LinearGradient(
-                                        colors: [.yellow, Color.orange.opacity(0.9)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                        Text("PLAY")
+                            .font(.system(.headline, design: .monospaced).bold())
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                Group {
+                                    if selectedGenre == nil || selectedDifficulty == nil {
+                                        colorScheme == .light ? Color.black.opacity(0.1) : Color.gray.opacity(0.3)
+                                    } else {
+                                        LinearGradient(
+                                            colors: [.yellow, Color.orange.opacity(0.9)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    }
                                 }
-                            }
-                        )
-                        .cornerRadius(14)
-                        .shadow(color: selectedGenre == nil ? .clear : .yellow.opacity(0.4), radius: 6)
+                            )
+                            .cornerRadius(14)
+                            .shadow(color: (selectedGenre == nil || selectedDifficulty == nil) ? .clear : .yellow.opacity(0.4), radius: 6)
+                    }
+                    .disabled(selectedGenre == nil || selectedDifficulty == nil)
+                    .padding(.horizontal, 24)
+                    
+                    Button("Exit Game Hub") {
+                        dismiss()
+                    }
+                    .font(.subheadline.bold())
+                    .foregroundColor(.secondary)
                 }
-                .disabled(selectedGenre == nil)
-                .padding(.horizontal, 24)
-                
-                Button("Exit Game Hub") {
-                    dismiss()
-                }
-                .font(.subheadline.bold())
-                .foregroundColor(.secondary)
+                .padding(.bottom, 75) // raised to clear the tabbar footer
             }
-            .padding(.bottom, 20)
         }
     }
     
@@ -335,10 +424,10 @@ struct QuizRushView: View {
             highScore: viewModel.highScore,
             newHighScore: viewModel.score > viewModel.highScore && viewModel.score > 0,
             onRestart: {
-                // Play Again resets selection state to let players pick another topic
                 withAnimation {
                     isGameStarted = false
                     selectedGenre = nil
+                    selectedDifficulty = nil
                 }
             },
             onExit: {
@@ -409,8 +498,4 @@ struct QuizRushView: View {
         }
         return colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.08)
     }
-}
-
-#Preview {
-    QuizRushView()
 }

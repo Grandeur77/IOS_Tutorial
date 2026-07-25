@@ -48,7 +48,7 @@ class StatsVM: ObservableObject {
     
     // game distribution
     var gameDistribution: [GameDistribution] {
-        let lightItUpCount = sessions.filter { $0.mode == .lightItUp }.count
+        let lightItUpCount = sessions.filter { $0.mode == .lightItUp || $0.mode.rawValue.contains("Light It Up") }.count
         let quizRushCount = sessions.filter { $0.mode == .quizRush }.count
         let tapFrenzyCount = sessions.filter { $0.mode.rawValue.contains("Tap Frenzy") }.count
         
@@ -72,7 +72,7 @@ class StatsVM: ObservableObject {
         case .tapFrenzy:
             filtered = sessions.filter { $0.mode.rawValue.contains("Tap Frenzy") }
         case .lightItUp:
-            filtered = sessions.filter { $0.mode == .lightItUp }
+            filtered = sessions.filter { $0.mode == .lightItUp || $0.mode.rawValue.contains("Light It Up") }
         case .quizRush:
             filtered = sessions.filter { $0.mode == .quizRush }
         }

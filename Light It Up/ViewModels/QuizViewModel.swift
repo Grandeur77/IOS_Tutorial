@@ -17,8 +17,9 @@ class QuizViewModel: ObservableObject {
     @Published var selectedAnswer: String? = nil
     @Published var answeredCorrectly: Bool? = nil
     
-    // Stores selected category ID
+    // Stores selected category and difficulty
     @Published var selectedGenreID: Int? = nil
+    @Published var selectedDifficulty: String? = nil
     
     // Time Attack properties
     @Published var questionTimeRemaining: Double = 10.0
@@ -31,7 +32,7 @@ class QuizViewModel: ObservableObject {
     private let networkService = NetworkService()
     
     @MainActor
-    func loadQuestions(categoryID: Int? = nil) async {
+    func loadQuestions(categoryID: Int? = nil, difficulty: String? = nil) async {
         stopQuestionTimer()
         viewState = .loading
         isQuizFinished = false
@@ -42,13 +43,19 @@ class QuizViewModel: ObservableObject {
         selectedAnswer = nil
         answeredCorrectly = nil
         
-        // Cache the category ID if provided
+        // Cache parameters if provided
         if let categoryID = categoryID {
             self.selectedGenreID = categoryID
         }
+        if let difficulty = difficulty {
+            self.selectedDifficulty = difficulty
+        }
         
         do {
-            let fetchedQuestions = try await networkService.fetchQuestions(categoryID: self.selectedGenreID)
+            let fetchedQuestions = try await networkService.fetchQuestions(
+                categoryID: self.selectedGenreID,
+                difficulty: self.selectedDifficulty
+            )
             
             let displayable = fetchedQuestions.map { question in
                 DisplayableQuestion(

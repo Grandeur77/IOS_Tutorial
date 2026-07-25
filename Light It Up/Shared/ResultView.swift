@@ -30,7 +30,7 @@ struct ResultView: View {
         let activeUser = UserDefaults.standard.string(forKey: "PlayerDisplayName") ?? "Guest"
         
         let filtered = allSessions.filter { session in
-            session.mode == gameMode && (session.username == activeUser)
+            session.mode == gameMode && (session.username?.lowercased() == activeUser.lowercased())
         }
         .sorted { $0.timestamp > $1.timestamp } // Sort by newest first
         

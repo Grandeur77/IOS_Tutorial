@@ -14,6 +14,7 @@ struct MapTab: View {
     @State private var sessions: [GameSession] = []
     @State private var selectedFilter: GameMapFilter = .all
     @State private var position: MapCameraPosition = .automatic
+    @State private var showHistorySheet: Bool = false
     
     @Environment(\.colorScheme) var colorScheme
     
@@ -21,8 +22,8 @@ struct MapTab: View {
         colorScheme == .light ? Color(red: 0.95, green: 0.95, blue: 0.97) : Color.black
     }
     
-    private var cardBackgroundColor: Color {
-        colorScheme == .light ? Color(UIColor.secondarySystemGroupedBackground) : Color.white.opacity(0.03)
+    private var floatingContainerColor: Color {
+        colorScheme == .light ? Color.white.opacity(0.85) : Color.black.opacity(0.75)
     }
     
     // Filters sessions that have location coordinates
@@ -47,9 +48,68 @@ struct MapTab: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                baseBackgroundColor.ignoresSafeArea()
+                // The Map takes up the FULL frame behind overlay controls
+                Map(position: $position) {
+                    ForEach(filteredSessions) { session in
+                        Marker(
+                            "\(session.mode.rawValue): \(session.score) pts",
+                            coordinate: CLLocationCoordinate2D(
+                                latitude: session.latitude!,
+                                longitude: session.longitude!
+                            )
+                        )
+                        .tint(colorForGameMode(session.mode))
+                    }
+                }
+                .mapStyle(.standard(elevation: .realistic))
+                .ignoresSafeArea(edges: .bottom)
                 
+                // Floating Segmented Filter Control at the top
+                VStack {
+                    Picker("Filter Game", selection: $selectedFilter) {
+                        ForEach(GameMapFilter.allCases) { filter in
+                            Text(filter.rawValue).tag(filter)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(floatingContainerColor)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                    )
+                    .padding()
+                    
+                    Spacer()
+                }
+                
+                // Floating circular "Show History List" button in the bottom right corner
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showHistorySheet = true
+                        }) {
+                            Image(systemName: "list.bullet.clipboard.fill")
+                                .font(.title2)
+                                .foregroundColor(colorScheme == .light ? .white : .black)
+                                .frame(width: 56, height: 56)
+                                .background(Color.accentColor)
+                                .clipShape(Circle())
+                                .shadow(color: Color.accentColor.opacity(0.4), radius: 6, x: 0, y: 3)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 90) // raised to stay clear of the tabbar overlay
+                    }
+                }
+                
+                // Overlay message when history is completely empty
                 if mappedSessions.isEmpty {
+                    Color.black.opacity(0.6).ignoresSafeArea()
+                    
                     VStack(spacing: 16) {
                         Image(systemName: "map.fill")
                             .font(.system(size: 60))
@@ -57,42 +117,48 @@ struct MapTab: View {
                         
                         Text("No Game Locations Yet")
                             .font(.title2.bold())
-                            .foregroundColor(.primary)
+                            .foregroundColor(.white)
                         
                         Text("Enable location permissions and complete games to see pins on the map!")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white.opacity(0.7))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }
-                } else {
-                    VStack(spacing: 0) {
-                        // Game selection filter picker at the top
-                        Picker("Filter Game", selection: $selectedFilter) {
-                            ForEach(GameMapFilter.allCases) { filter in
-                                Text(filter.rawValue).tag(filter)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding()
-                        
-                        // Map view showing pins
-                        Map(position: $position) {
-                            ForEach(filteredSessions) { session in
-                                Marker(
-                                    "\(session.mode.rawValue): \(session.score) pts",
-                                    coordinate: CLLocationCoordinate2D(
-                                        latitude: session.latitude!,
-                                        longitude: session.longitude!
-                                    )
-                                )
-                                .tint(colorForGameMode(session.mode))
-                            }
-                        }
-                        .mapStyle(.standard(elevation: .realistic))
-                        .frame(height: 300)
-                        
-                        // Interactive list of sessions
+                    .padding()
+                }
+            }
+            .navigationTitle("Location History")
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                sessions = GameSessionStore.loadSessions()
+                LocationService.shared.startUpdating()
+            }
+            .onDisappear {
+                LocationService.shared.stopUpdating()
+            }
+            // Present sheet drawer list with presentation detents (drawer slide-up tray)
+            .sheet(isPresented: $showHistorySheet) {
+                VStack(spacing: 0) {
+                    // Drawer Header
+                    Capsule()
+                        .fill(Color.gray.opacity(0.4))
+                        .frame(width: 36, height: 5)
+                        .padding(.top, 8)
+                        .padding(.bottom, 12)
+                    
+                    Text("GAME LOCATIONS HISTORY")
+                        .font(.system(size: 11, weight: .bold).monospaced())
+                        .foregroundColor(.secondary)
+                        .padding(.bottom, 8)
+                    
+                    if filteredSessions.isEmpty {
+                        Spacer()
+                        Text("No records found for this game filter.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    } else {
                         List(filteredSessions) { session in
                             Button(action: {
                                 withAnimation(.easeInOut(duration: 0.8)) {
@@ -101,9 +167,10 @@ struct MapTab: View {
                                             latitude: session.latitude!,
                                             longitude: session.longitude!
                                         ),
-                                        distance: 8000
+                                        distance: 6000
                                     ))
                                 }
+                                showHistorySheet = false // Collapse map drawer to view the full screen map
                             }) {
                                 HStack(spacing: 12) {
                                     Image(systemName: "mappin.circle.fill")
@@ -132,17 +199,8 @@ struct MapTab: View {
                         .listStyle(.plain)
                     }
                 }
-            }
-            .navigationTitle("Location History")
-            .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                // Reload history and start GPS updates
-                sessions = GameSessionStore.loadSessions()
-                LocationService.shared.startUpdating()
-            }
-            .onDisappear {
-                // Stop GPS updates on exit to save battery
-                LocationService.shared.stopUpdating()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.hidden) // Custom capsule is shown
             }
         }
     }

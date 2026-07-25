@@ -250,7 +250,7 @@ struct LoginView: View {
         if isSignUpMode {
             let success = AuthService.shared.register(username: u, password: p)
             if success {
-                displayName = u
+                displayName = u.lowercased()
                 withAnimation {
                     isUserLoggedIn = true
                 }
@@ -261,7 +261,7 @@ struct LoginView: View {
         } else {
             let success = AuthService.shared.login(username: u, password: p)
             if success {
-                displayName = u
+                displayName = u.lowercased()
                 withAnimation {
                     isUserLoggedIn = true
                 }

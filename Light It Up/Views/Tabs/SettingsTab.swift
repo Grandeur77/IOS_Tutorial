@@ -161,13 +161,13 @@ struct SettingsTab: View {
                                                 let oldName = displayName
                                                 let success = AuthService.shared.updateUsername(from: oldName, to: trimmed)
                                                 if success {
-                                                    displayName = trimmed
+                                                    displayName = trimmed.lowercased()
                                                 } else {
                                                     alertMessage = "Username already exists. Please choose a different one."
                                                     showErrorAlert = true
                                                 }
                                             } else {
-                                                displayName = trimmed
+                                                displayName = trimmed.lowercased()
                                             }
                                         }
                                         hideKeyboard()

@@ -29,16 +29,29 @@ struct StatsTab: View {
         colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
     }
     
+    // Theme Colors
+    private var darkYellow: Color {
+        colorScheme == .light ? Color(red: 0.75, green: 0.55, blue: 0.0) : Color(red: 0.95, green: 0.75, blue: 0.0)
+    }
+    
+    private var themeBlue: Color {
+        colorScheme == .light ? Color(red: 0.0, green: 0.4, blue: 0.85) : Color(red: 0.1, green: 0.6, blue: 1.0)
+    }
+    
     private var headerTextColor: Color {
-        colorScheme == .light ? Color.orange : Color.yellow
+        darkYellow
     }
     
     func colorForGameName(_ name: String) -> Color {
         switch name {
-        case "Light It Up": return .accentColor
-        case "Quiz Rush": return .purple
-        case "Tap Frenzy": return .yellow
-        default: return .gray
+        case "Light It Up":
+            return darkYellow
+        case "Quiz Rush":
+            return themeBlue
+        case "Tap Frenzy":
+            return colorScheme == .light ? Color(red: 0.0, green: 0.25, blue: 0.6) : Color(red: 0.0, green: 0.7, blue: 0.9)
+        default:
+            return .gray
         }
     }
     
@@ -69,14 +82,14 @@ struct StatsTab: View {
                                 title: "Total Games",
                                 value: "\(viewModel.totalGamesPlayed)",
                                 icon: "gamecontroller.fill",
-                                color: .accentColor
+                                color: themeBlue
                             )
                             
                             StatSummaryCard(
                                 title: "Avg Score",
                                 value: String(format: "%.1f", viewModel.averageScore),
                                 icon: "chart.bar.fill",
-                                color: .yellow
+                                color: darkYellow
                             )
                         }
                         .padding(.horizontal)
@@ -98,7 +111,7 @@ struct StatsTab: View {
                                             .foregroundColor(selectedChartMode == category ? (colorScheme == .light ? .white : .black) : (colorScheme == .light ? .primary : .white))
                                             .padding(.vertical, 8)
                                             .frame(maxWidth: .infinity)
-                                            .background(selectedChartMode == category ? Color.accentColor : (colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.06)))
+                                            .background(selectedChartMode == category ? themeBlue : (colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.06)))
                                             .cornerRadius(8)
                                     }
                                 }
@@ -127,7 +140,7 @@ struct StatsTab: View {
                                             x: .value("Game", "G\(index + 1)"),
                                             y: .value("Score", session.score)
                                         )
-                                        .foregroundStyle(Color.accentColor.gradient)
+                                        .foregroundStyle(themeBlue.gradient)
                                         .cornerRadius(4)
                                     }
                                 }
@@ -246,7 +259,7 @@ struct StatsTab: View {
                                             .foregroundColor(selectedLeaderboardMode == category ? (colorScheme == .light ? .white : .black) : (colorScheme == .light ? .primary : .white))
                                             .padding(.vertical, 8)
                                             .frame(maxWidth: .infinity)
-                                            .background(selectedLeaderboardMode == category ? Color.accentColor : (colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.06)))
+                                            .background(selectedLeaderboardMode == category ? themeBlue : (colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.06)))
                                             .cornerRadius(8)
                                     }
                                 }
@@ -292,14 +305,14 @@ struct StatsTab: View {
                                     title: "Light It Up",
                                     score: viewModel.personalBest(for: .lightItUp),
                                     icon: "lightbulb.fill",
-                                    color: .accentColor
+                                    color: darkYellow
                                 )
                                 
                                 PersonalBestRow(
                                     title: "Quiz Rush",
                                     score: viewModel.personalBest(for: .quizRush),
                                     icon: "questionmark.circle.fill",
-                                    color: .accentColor
+                                    color: themeBlue
                                 )
                                 
                                 PersonalBestRow(
@@ -313,7 +326,7 @@ struct StatsTab: View {
                                         viewModel.personalBest(for: .tapFrenzyBurst)
                                     ),
                                     icon: "hand.tap.fill",
-                                    color: .accentColor
+                                    color: themeBlue
                                 )
                             }
                             .padding(.horizontal)
@@ -347,16 +360,24 @@ struct LeaderboardRow: View {
         colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
     }
     
+    private var darkYellow: Color {
+        colorScheme == .light ? Color(red: 0.75, green: 0.55, blue: 0.0) : Color(red: 0.95, green: 0.75, blue: 0.0)
+    }
+    
     private var highlightColor: Color {
-        colorScheme == .light ? Color.orange : Color.yellow
+        darkYellow
     }
     
     private var rankColor: Color {
         switch rank {
-        case 1: return colorScheme == .light ? .orange : .yellow
-        case 2: return .gray.opacity(0.8)
-        case 3: return .orange.opacity(0.8)
-        default: return colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.05)
+        case 1:
+            return darkYellow // Gold
+        case 2:
+            return .gray.opacity(0.8) // Silver
+        case 3:
+            return colorScheme == .light ? Color(red: 0.7, green: 0.4, blue: 0.2) : Color(red: 0.8, green: 0.5, blue: 0.3) // Bronze
+        default:
+            return colorScheme == .light ? Color.black.opacity(0.05) : Color.white.opacity(0.05)
         }
     }
     
@@ -478,8 +499,12 @@ struct PersonalBestRow: View {
         colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.05)
     }
     
+    private var darkYellow: Color {
+        colorScheme == .light ? Color(red: 0.75, green: 0.55, blue: 0.0) : Color(red: 0.95, green: 0.75, blue: 0.0)
+    }
+    
     private var highlightColor: Color {
-        colorScheme == .light ? Color.orange : Color.yellow
+        darkYellow
     }
     
     var body: some View {

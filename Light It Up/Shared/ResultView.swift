@@ -52,6 +52,11 @@ struct ResultView: View {
         ZStack {
             baseBackgroundColor.ignoresSafeArea()
             
+            // Celebrate new high scores with animated confetti particles!
+            if newHighScore {
+                ConfettiView(count: 85)
+            }
+            
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
                     // Header Title
@@ -179,6 +184,68 @@ struct ResultView: View {
                 }
             }
         }
+    }
+}
+
+// Pure SwiftUI falling confetti effect
+struct ConfettiView: View {
+    @State private var animate = false
+    let colors: [Color] = [.red, .blue, .green, .yellow, .pink, .purple, .orange, .cyan, .mint]
+    let count: Int
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(0..<count, id: \.self) { index in
+                    let size = CGFloat.random(in: 6...14)
+                    let xPosition = CGFloat.random(in: 0...geometry.size.width)
+                    let color = colors.randomElement() ?? .red
+                    let speed = Double.random(in: 2.5...5.0)
+                    let delay = Double.random(in: 0...3.0)
+                    let rotation = Double.random(in: 180...720)
+                    let shapeType = Int.random(in: 0...2)
+                    
+                    Group {
+                        if shapeType == 0 {
+                            Rectangle()
+                                .fill(color)
+                        } else if shapeType == 1 {
+                            Circle()
+                                .fill(color)
+                        } else {
+                            Triangle()
+                                .fill(color)
+                        }
+                    }
+                    .frame(width: size, height: size)
+                    .rotationEffect(.degrees(animate ? rotation : 0))
+                    .position(x: xPosition, y: animate ? geometry.size.height + 30 : -30)
+                    .animation(
+                        Animation.linear(duration: speed)
+                            .repeatForever(autoreverses: false)
+                            .delay(delay),
+                        value: animate
+                    )
+                }
+            }
+            .onAppear {
+                animate = true
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
+
+// Helper Shape for Triangle Confetti
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }
 

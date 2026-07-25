@@ -297,16 +297,6 @@ struct SettingsTab: View {
                                         }
                                 }
                                 
-                                Divider().background(dividerColor)
-                                
-                                Button(action: {
-                                    NotificationService.shared.requestPermission()
-                                    NotificationService.shared.scheduleTestNotification()
-                                }) {
-                                    Label("Send Test Notification (5s Delay)", systemImage: "timer")
-                                        .font(.subheadline.bold())
-                                        .foregroundColor(.accentColor)
-                                }
                             }
                             .padding(20)
                             .background(cardBackgroundColor)
@@ -397,7 +387,7 @@ struct SettingsTab: View {
     
     private func triggerTestAlert() {
         if isSoundEnabled {
-            AudioServicesPlaySystemSound(1004)
+            SoundManager.shared.playSuccess()
         }
         if isHapticsEnabled {
             let generator = UIImpactFeedbackGenerator(style: .medium)

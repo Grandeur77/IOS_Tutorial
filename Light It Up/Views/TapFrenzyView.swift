@@ -381,26 +381,35 @@ struct TapFrenzyGameView: View {
             }
             lastTapTime = now
             score += multiplier
+            SoundManager.shared.playSuccess()
         case .trapColour:
             if isTrapGreen {
                 score += 5
+                SoundManager.shared.playSuccess()
             } else if buttonColor == .gray {
                 score = max(0, score - 2)
+                SoundManager.shared.playFailure()
             } else {
                 score += 1
+                SoundManager.shared.playSuccess()
             }
         case .moving:
             score += 1
+            SoundManager.shared.playSuccess()
         case .shrinking:
             score += 1
+            SoundManager.shared.playSuccess()
         case .burst:
             if burstActive {
                 score += 2
+                SoundManager.shared.playSuccess()
             } else {
                 score += 1
+                SoundManager.shared.playSuccess()
             }
         default:
             score += 1
+            SoundManager.shared.playSuccess()
         }
     }
     
@@ -421,6 +430,7 @@ struct TapFrenzyGameView: View {
             timeLeft -= 0.05
             if timeLeft <= 0 {
                 timer?.invalidate()
+                SoundManager.shared.playFailure()
                 gameOver()
             }
         }

@@ -367,6 +367,7 @@ struct LightItUpGameContainer: View {
 
             if gameTimeRemaining <= 0 {
                 gameTimeRemaining = 0
+                SoundManager.shared.playFailure()
                 endGame()
                 return
             }
@@ -383,6 +384,7 @@ struct LightItUpGameContainer: View {
             if litTimeRemaining <= 0 {
                 timer?.invalidate()
                 showMissed = true
+                SoundManager.shared.playFailure()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     showMissed = false
                     endGame()
@@ -420,7 +422,9 @@ struct LightItUpGameContainer: View {
                     litCardIndices.insert(newCard)
                 }
                 litTimeRemaining = currentLevel.litWindow
+                SoundManager.shared.playSuccess()
             } else {
+                SoundManager.shared.playFailure()
                 endGame()
             }
             
@@ -429,13 +433,16 @@ struct LightItUpGameContainer: View {
                 score += 1
                 repositionColorTrapCards()
                 litTimeRemaining = currentLevel.litWindow
+                SoundManager.shared.playSuccess()
             } else if trapCardIndices.contains(idx) {
+                SoundManager.shared.playFailure()
                 showMissed = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     showMissed = false
                     endGame()
                 }
             } else {
+                SoundManager.shared.playFailure()
                 endGame()
             }
             
@@ -443,6 +450,7 @@ struct LightItUpGameContainer: View {
             let expectedIndex = playerSequence.count
             if expectedIndex < memorySequence.count && memorySequence[expectedIndex] == idx {
                 playerSequence.append(idx)
+                SoundManager.shared.playSuccess()
                 if playerSequence.count == memorySequence.count {
                     score += memorySequence.count
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -450,6 +458,7 @@ struct LightItUpGameContainer: View {
                     }
                 }
             } else {
+                SoundManager.shared.playFailure()
                 endGame()
             }
             
@@ -457,11 +466,13 @@ struct LightItUpGameContainer: View {
             if litCardIndices.contains(idx) {
                 score += 1
                 litCardIndices.remove(idx)
+                SoundManager.shared.playSuccess()
                 if litCardIndices.isEmpty {
                     setupDoubleTroubleCards()
                     litTimeRemaining = currentLevel.litWindow
                 }
             } else {
+                SoundManager.shared.playFailure()
                 endGame()
             }
         }

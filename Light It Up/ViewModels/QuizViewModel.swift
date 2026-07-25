@@ -90,10 +90,12 @@ class QuizViewModel: ObservableObject {
             streak += 1
             let streakBonus = (streak - 1) * 5
             score += 10 + streakBonus
+            SoundManager.shared.playSuccess()
         } else {
             answeredCorrectly = false
             streak = 0
             score = max(0, score - 3)
+            SoundManager.shared.playFailure()
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -111,6 +113,7 @@ class QuizViewModel: ObservableObject {
         selectedAnswer = "" // Empty indicates timeout
         streak = 0
         score = max(0, score - 3)
+        SoundManager.shared.playFailure()
         
         // Let the user see the correct answer
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
